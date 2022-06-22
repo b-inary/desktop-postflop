@@ -18,10 +18,11 @@ Please note that the current version is highly experimental.
 
 ### Supported environments
 
-- OS: Windows 7+, macOS 10.13+, Linux
+- OS: Windows 7+, macOS 10.15+, Linux
 - CPU: must support AVX instructions
   - Intel: Sandy Bridge and later
   - AMD: Zen (1st gen) and later
+  - **Mac with M1/M2 chip is not supported**
 
 ## Build
 
