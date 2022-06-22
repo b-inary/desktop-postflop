@@ -30,4 +30,6 @@ jobs:
         uses: softprops/action-gh-release@v1
         with:
           draft: true
-          files: src-tauri/target/release/bundle/msi/Desktop Postflop_*_x64_en-US.msi
+          files: |
+            src-tauri/target/release/Desktop Postflop.exe
+            src-tauri/target/release/bundle/msi/Desktop Postflop_*_x64_en-US.msi

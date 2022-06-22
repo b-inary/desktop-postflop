@@ -9,18 +9,23 @@ However, if you want to use the solver for more serious purposes, please conside
 [WASM Postflop]: https://github.com/b-inary/wasm-postflop
 [Tauri]: https://tauri.app/
 
-## Download
-
-You can download the installer from the [GitHub releases page].
-
-[GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
-
-### Supported environments
+## Supported environments
 
 - OS: Windows 10/11
 - CPU: must support AVX instructions
   - Intel: Sandy Bridge and later
   - AMD: Zen (1st gen) and later
+
+## Download
+
+You can download the installer (.msi) or the portable executable (.exe) from the [GitHub releases page].
+
+[GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
+
+- The installer version automatically prepares dependent runtimes.
+- To launch the portable version, the [Webview2] runtime needs to be installed (on Windows 11, WebView2 is preinstalled).
+
+[Webview2]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
 
 ## Build
 
