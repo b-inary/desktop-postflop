@@ -16,6 +16,13 @@ Please note that the current version is highly experimental.
 
 [GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
 
+### Supported environments
+
+- OS: Windows 7+, macOS 10.13+, Linux
+- CPU: must support AVX instructions
+  - Intel: Sandy Bridge and later
+  - AMD: Zen (1st gen) and later
+
 ## Build
 
 Please see the [Tauri documentation].
