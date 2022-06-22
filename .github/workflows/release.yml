@@ -7,20 +7,7 @@ on:
 
 jobs:
   release:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: macos-latest
-            NAME: mac-intel
-          - os: macos-latest
-            NAME: mac-arm
-          - os: ubuntu-latest
-            NAME: linux
-          - os: windows-latest
-            NAME: windows
-
-    runs-on: ${{ matrix.os }}
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -28,68 +15,18 @@ jobs:
         uses: actions/setup-node@v1
         with:
           node-version: 16
-      - name: Setup Rust nightly (x86_64)
-        if: matrix.NAME != 'mac-arm'
+      - name: Setup Rust nightly
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
           default: true
-      - name: Setup Rust nightly (Arm)
-        if: matrix.NAME == 'mac-arm'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          target: aarch64-apple-darwin
-          default: true
-      - name: Install dependencies (Linux only)
-        if: matrix.NAME == 'linux'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.0 libappindicator3-dev librsvg2-dev patchelf
       - name: Install app dependencies
         run: npm ci
       - name: Install Tauri CLI
         run: npm install --save-dev @tauri-apps/cli
-
-      # Build (x86_64)
-      - name: Build the app (x86_64)
-        if: matrix.NAME != 'mac-arm'
+      - name: Build the app
         run: npx tauri build
-
-      # Build (Arm)
-      - name: Build the app (Arm)
-        if: matrix.NAME == 'mac-arm'
-        run: npx tauri build --target aarch64-apple-darwin
-
-      # Upload artifacts (Intel Mac)
-      - name: Upload artifacts (Intel Mac)
-        if: matrix.NAME == 'mac-intel'
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          files: src-tauri/target/release/bundle/dmg/Desktop Postflop_*_x64.dmg
-
-      # Upload artifacts (Arm Mac)
-      - name: Upload artifacts (Arm Mac)
-        if: matrix.NAME == 'mac-arm'
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Desktop Postflop_*_aarch64.dmg
-
-      # Upload artifacts (Linux)
-      - name: Upload artifacts (Linux)
-        if: matrix.NAME == 'linux'
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          files: |
-            src-tauri/target/release/bundle/deb/desktop-postflop_*_amd64.deb
-            src-tauri/target/release/bundle/appimage/desktop-postflop_*_amd64.AppImage
-
-      # Upload artifacts (Windows)
-      - name: Upload artifacts (Windows)
-        if: matrix.NAME == 'windows'
+      - name: Upload artifacts
         uses: softprops/action-gh-release@v1
         with:
           draft: true

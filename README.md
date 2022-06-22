@@ -2,7 +2,7 @@
 
 **Desktop Postflop** is a free, open-source GTO solver for Texas hold'em poker.
 
-This is a port of [WASM Postflop] to native desktop applications using the [Tauri] framework.
+This is a port of [WASM Postflop] to native desktop application using the [Tauri] framework.
 Since WASM Postflop works on web browsers, it is more suitable for casual use.
 However, if you want to use the solver for more serious purposes, please consider installing Desktop Postflop.
 
@@ -12,14 +12,13 @@ However, if you want to use the solver for more serious purposes, please conside
 ## Download
 
 You can download the installer from the [GitHub releases page].
-Please note that the current version is highly experimental.
 
 [GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
 
 ### Supported environments
 
-- OS: Windows 7+, macOS 10.15+, Linux
-- CPU: must support AVX instructions (except for M1/M2 Mac)
+- OS: Windows 10/11
+- CPU: must support AVX instructions
   - Intel: Sandy Bridge and later
   - AMD: Zen (1st gen) and later
 
