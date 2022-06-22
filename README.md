@@ -9,6 +9,13 @@ However, if you want to use the solver for more serious purposes, please conside
 [WASM Postflop]: https://github.com/b-inary/wasm-postflop
 [Tauri]: https://tauri.app/
 
+## Download
+
+You can download the installer from the [GitHub releases page].
+Please note that the current version is highly experimental.
+
+[GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
+
 ## Build
 
 Please see the [Tauri documentation].
