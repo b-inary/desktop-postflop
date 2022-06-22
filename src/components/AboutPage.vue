@@ -1,5 +1,5 @@
 <template>
-  <p>Desktop Postflop v0.0.2</p>
+  <p>Desktop Postflop v0.0.3</p>
   <p>Copyright (C) 2022 Wataru Inariba</p>
   <p>
     <a
