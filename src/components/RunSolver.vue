@@ -502,7 +502,7 @@ export default defineComponent({
       store.isSolverRunning = false;
       store.isFinalizing = true;
 
-      store.normalizer = await invoke("game_finalize");
+      await invoke("game_finalize");
 
       store.isFinalizing = false;
       store.isSolverFinished = true;

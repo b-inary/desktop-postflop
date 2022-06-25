@@ -22,10 +22,8 @@ jobs:
           default: true
       - name: Install app dependencies
         run: npm ci
-      - name: Install Tauri CLI
-        run: npm install --save-dev @tauri-apps/cli
       - name: Build the app
-        run: npx tauri build
+        run: npm run tauri build
       - name: Upload artifacts
         uses: softprops/action-gh-release@v1
         with:

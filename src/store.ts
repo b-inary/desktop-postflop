@@ -70,6 +70,7 @@ function parseBetSizes(
   const sizes = split.map((s) => parseNumber(s.trim()));
 
   if (
+    sizes.length > 10 ||
     sizes.some(
       (s) =>
         Number.isNaN(s) ||
@@ -149,7 +150,6 @@ export const useStore = defineStore("app", {
     isSolverPaused: false,
     isSolverFinished: false,
     isFinalizing: false,
-    normalizer: 0,
   }),
 
   getters: {
