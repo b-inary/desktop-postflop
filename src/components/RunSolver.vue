@@ -105,7 +105,7 @@
             ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
             : '')
         "
-        :disabled="store.hasSolverRun"
+        :disabled="store.hasSolverRun && !store.isSolverPaused"
         min="0"
         step="0.05"
       />
@@ -119,12 +119,12 @@
         type="number"
         :class="
           'w-[5.5rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (maxIterations < 1 || maxIterations % 1 !== 0
+          (maxIterations < 0 || maxIterations % 1 !== 0
             ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
             : '')
         "
-        :disabled="store.hasSolverRun"
-        min="1"
+        :disabled="store.hasSolverRun && !store.isSolverPaused"
+        min="0"
         max="100000"
       />
     </p>
@@ -136,7 +136,7 @@
           store.hasSolverRun ||
           memoryUsageCompressed > 0.95 * availableMemory ||
           targetExploitability <= 0 ||
-          maxIterations < 1 ||
+          maxIterations < 0 ||
           maxIterations % 1 !== 0
         "
         @click="runSolver"
@@ -315,10 +315,11 @@ export default defineComponent({
     const terminateFlag = ref(false);
     const pauseFlag = ref(false);
     const currentIteration = ref(-1);
-    const exploitability = ref(-1);
+    const exploitability = ref(Number.POSITIVE_INFINITY);
     const elapsedTimeMs = ref(-1);
 
     let startTime = 0;
+    let exploitabilityUpdated = false;
 
     const iterationText = computed(() => {
       if (currentIteration.value === -1) {
@@ -329,7 +330,7 @@ export default defineComponent({
     });
 
     const exploitabilityText = computed(() => {
-      if (exploitability.value === -1) {
+      if (!Number.isFinite(exploitability.value)) {
         return "";
       } else {
         const valueText = exploitability.value.toFixed(2);
@@ -449,7 +450,7 @@ export default defineComponent({
       terminateFlag.value = false;
       pauseFlag.value = false;
       currentIteration.value = -1;
-      exploitability.value = -1;
+      exploitability.value = Number.POSITIVE_INFINITY;
       elapsedTimeMs.value = -1;
 
       store.isSolverRunning = true;
@@ -461,6 +462,7 @@ export default defineComponent({
       });
 
       currentIteration.value = 0;
+      exploitabilityUpdated = false;
       await resumeSolver();
     };
 
@@ -474,7 +476,11 @@ export default defineComponent({
 
       const target = (config.startingPot * targetExploitability.value) / 100;
 
-      while (currentIteration.value < maxIterations.value) {
+      while (
+        !terminateFlag.value &&
+        currentIteration.value < maxIterations.value &&
+        exploitability.value > target
+      ) {
         if (pauseFlag.value) {
           const end = performance.now();
           elapsedTimeMs.value += end - startTime;
@@ -485,18 +491,20 @@ export default defineComponent({
           return;
         }
 
-        await invoke("game_solve_step", {
-          currentIteration: currentIteration.value,
-        });
+        const payload = { currentIteration: currentIteration.value };
+        await invoke("game_solve_step", payload);
         ++currentIteration.value;
+        exploitabilityUpdated = false;
 
-        if (currentIteration.value % 10 === 0 || terminateFlag.value) {
+        if (currentIteration.value % 10 === 0) {
           exploitability.value = await invoke("game_exploitability");
           exploitability.value = Math.max(exploitability.value, 0);
-          if (exploitability.value <= target || terminateFlag.value) {
-            break;
-          }
+          exploitabilityUpdated = true;
         }
+      }
+
+      if (!exploitabilityUpdated) {
+        exploitability.value = Math.max(await invoke("game_exploitability"), 0);
       }
 
       store.isSolverRunning = false;

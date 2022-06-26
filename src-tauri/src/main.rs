@@ -347,16 +347,25 @@ fn game_current_player(game_state: tauri::State<Mutex<PostFlopGame>>) -> usize {
     game.current_player()
 }
 
+#[derive(serde::Serialize)]
+struct GameResultsResponse {
+    weights: Vec<f32>,
+    weights_normalized: Vec<f64>,
+    expected_values: Vec<f32>,
+    equity: Vec<f32>,
+    strategy: Vec<f32>,
+}
+
 #[tauri::command]
-fn game_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> Vec<f32> {
+fn game_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> GameResultsResponse {
     let game = game_state.lock().unwrap();
     let player = game.current_player();
-    game.weights(player)
-        .iter()
-        .cloned()
-        .chain(game.normalized_weights(player).iter().map(|&x| x as f32))
-        .chain(game.expected_values().into_iter())
-        .chain(game.equity().into_iter())
-        .chain(game.strategy().into_iter())
-        .collect()
+
+    GameResultsResponse {
+        weights: game.weights(player).to_vec(),
+        weights_normalized: game.normalized_weights(player).to_vec(),
+        expected_values: game.expected_values(),
+        equity: game.equity(),
+        strategy: game.strategy(),
+    }
 }

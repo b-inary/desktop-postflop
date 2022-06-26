@@ -521,12 +521,21 @@ export default defineComponent({
       const currentPlayer: number = await invoke("game_current_player");
       const cards = handCards.value[currentPlayer];
 
-      const results: number[] = await invoke("game_results");
-      const weights = results.slice(0, cards.length);
-      const weightsNormalized = results.slice(cards.length, 2 * cards.length);
-      const expectedValues = results.slice(2 * cards.length, 3 * cards.length);
-      const equity = results.slice(3 * cards.length, 4 * cards.length);
-      const strategy = results.slice(4 * cards.length);
+      type GameResultsResponse = {
+        weights: number[];
+        weights_normalized: number[];
+        expected_values: number[];
+        equity: number[];
+        strategy: number[];
+      };
+
+      const {
+        weights,
+        weights_normalized: weightsNormalized,
+        expected_values: expectedValues,
+        equity,
+        strategy,
+      }: GameResultsResponse = await invoke("game_results");
 
       if (divResultNav.value) {
         const div = divResultNav.value;
