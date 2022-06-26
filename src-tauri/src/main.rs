@@ -350,7 +350,7 @@ fn game_current_player(game_state: tauri::State<Mutex<PostFlopGame>>) -> usize {
 #[derive(serde::Serialize)]
 struct GameResultsResponse {
     weights: Vec<f32>,
-    weights_normalized: Vec<f64>,
+    weights_normalized: Vec<f32>,
     expected_values: Vec<f32>,
     equity: Vec<f32>,
     strategy: Vec<f32>,
