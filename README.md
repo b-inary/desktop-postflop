@@ -27,6 +27,14 @@ You can download the installer (.msi) or the portable executable (.exe) from the
 
 [WebView2]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
 
+## Uninstall
+
+To completely uninstall Desktop Postflop, please remove the following folder after the regular uninstallation:
+
+```
+C:\Users\<username>\AppData\Local\b-inary.desktop-postflop
+```
+
 ## Build
 
 Please see the [Tauri documentation].

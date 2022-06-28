@@ -1,11 +1,8 @@
 <template>
-  <div class="flex flex-row w-full mx-auto max-w-screen-xl">
+  <div class="flex flex-row w-full">
     <side-bar />
 
-    <main
-      class="flex-grow my-4 px-6 py-1 overflow-y-auto"
-      style="height: calc(100vh - 2rem)"
-    >
+    <main class="flex-grow h-screen px-6 py-5 overflow-y-auto">
       <div class="flex">
         <div
           :class="

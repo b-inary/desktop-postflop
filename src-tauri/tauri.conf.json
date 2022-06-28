@@ -56,11 +56,12 @@
     },
     "windows": [
       {
-        "fullscreen": false,
-        "height": 750,
-        "resizable": true,
         "title": "Desktop Postflop v0.0.3",
-        "width": 1300
+        "resizable": true,
+        "width": 1300,
+        "height": 750,
+        "minWidth": 1080,
+        "minHeight": 720
       }
     ]
   }

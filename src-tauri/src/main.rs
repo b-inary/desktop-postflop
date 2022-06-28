@@ -166,7 +166,7 @@ struct GameInitPayload {
     adjust_last_two_bet_sizes: bool,
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn game_init(
     payload: GameInitPayload,
     range_state: tauri::State<Mutex<RangeManager>>,
@@ -174,7 +174,6 @@ fn game_init(
     pool_state: tauri::State<Mutex<PoolManager>>,
 ) -> Option<String> {
     let ranges = &range_state.lock().unwrap().0;
-    let mut game = game_state.lock().unwrap();
     let mut pool_manager = pool_state.lock().unwrap();
 
     pool_manager.pool = rayon::ThreadPoolBuilder::new()
@@ -236,7 +235,9 @@ fn game_init(
         adjust_last_two_bet_sizes: payload.adjust_last_two_bet_sizes,
     };
 
-    game.update_config(&config).err()
+    pool_manager
+        .pool
+        .install(|| game_state.lock().unwrap().update_config(&config).err())
 }
 
 #[tauri::command]
@@ -254,7 +255,7 @@ fn game_memory_usage(game_state: tauri::State<Mutex<PostFlopGame>>) -> (u64, u64
     game.memory_usage()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 fn game_allocate_memory(enable_compression: bool, game_state: tauri::State<Mutex<PostFlopGame>>) {
     let mut game = game_state.lock().unwrap();
     game.allocate_memory(enable_compression);

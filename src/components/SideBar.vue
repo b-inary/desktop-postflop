@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="flex flex-col shrink-0 w-52 my-4 overflow-y-auto border-r-2"
+    class="flex flex-col shrink-0 w-[13.5rem] my-4 pl-2 overflow-y-auto border-r-2"
     style="height: calc(100vh - 2rem)"
   >
     <button :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
