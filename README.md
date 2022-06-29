@@ -4,10 +4,29 @@
 
 This is a port of [WASM Postflop] to a native desktop application using the [Tauri] framework.
 Since WASM Postflop works on web browsers, it is more suitable for casual use.
-However, if you want to use the solver for more serious purposes, please consider installing Desktop Postflop.
+However, if you want to use the solver for more serious purposes, please consider trying Desktop Postflop.
 
 [WASM Postflop]: https://github.com/b-inary/wasm-postflop
 [Tauri]: https://tauri.app/
+
+**Related repositories**
+- Solver engine: https://github.com/b-inary/postflop-solver
+
+## Comparison to WASM Postflop
+
+- **Shared features**:
+  - Free to use and open-source
+  - Same solver engine and user interface
+- **Advantages**:
+  - Faster computation
+  - Able to use more than 4GB of memory
+- **Disadvantages**:
+  - Only supports Windows
+  - Needs to download the program and trust the execution
+
+See the [WASM Postflop repository] for more detailed comparisons, including some commercial solvers.
+
+[WASM Postflop repository]: https://github.com/b-inary/wasm-postflop#comparison
 
 ## Supported environments
 
