@@ -3,7 +3,7 @@ name = "desktop-postflop"
 version = "0.1.0"
 authors = ["Wataru Inariba"]
 edition = "2021"
-rust-version = "1.57"
+rust-version = "1.59"
 repository = "https://github.com/b-inary/desktop-postflop/tree/main/src-tauri"
 license = "AGPL-3.0-or-later"
 
@@ -23,4 +23,7 @@ default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 
 [profile.release]
+codegen-units = 1
 lto = "thin"
+panic = "abort"
+strip = true

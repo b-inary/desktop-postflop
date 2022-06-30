@@ -19,15 +19,16 @@ jobs:
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
+          components: rust-src
           default: true
       - name: Install app dependencies
         run: npm ci
       - name: Build the app
-        run: npm run tauri build
+        run: npm run tauri build -- --target x86_64-pc-windows-msvc -- -Z build-std=core,std,alloc,proc_macro,panic_abort -Z build-std-features=panic_immediate_abort
       - name: Upload artifacts
         uses: softprops/action-gh-release@v1
         with:
           draft: true
           files: |
-            src-tauri/target/release/Desktop Postflop.exe
-            src-tauri/target/release/bundle/msi/Desktop Postflop_*_x64_en-US.msi
+            src-tauri/target/x86_64-pc-windows-msvc/release/Desktop Postflop.exe
+            src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Desktop Postflop_*_x64_en-US.msi
