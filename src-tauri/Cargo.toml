@@ -1,6 +1,6 @@
 [package]
 name = "desktop-postflop"
-version = "0.0.3"
+version = "0.1.0"
 authors = ["Wataru Inariba"]
 edition = "2021"
 rust-version = "1.57"
