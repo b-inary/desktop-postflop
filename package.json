@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "desktop-postflop",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "AGPL-3.0-or-later",
   "scripts": {
     "dev": "vite",
@@ -17,7 +17,7 @@
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
     "@tailwindcss/forms": "^0.5.2",
-    "@tauri-apps/cli": "^1.0.1",
+    "@tauri-apps/cli": "^1.0.2",
     "@types/node": "^18.0.0",
     "@vitejs/plugin-vue": "^2.3.3",
     "@vue/eslint-config-prettier": "^7.0.0",

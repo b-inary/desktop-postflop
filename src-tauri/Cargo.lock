@@ -518,7 +518,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-postflop"
-version = "0.1.0"
+version = "0.1.1"
 dependencies = [
  "postflop-solver",
  "rayon",
@@ -2150,7 +2150,7 @@ version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bfa0f585226d2e68097d4f95d113b15b83a82e819ab25717ec0590d9584ef366"
 dependencies = [
- "semver 1.0.11",
+ "semver 1.0.12",
 ]
 
 [[package]]
@@ -2223,9 +2223,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.11"
+version = "1.0.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d92beeab217753479be2f74e54187a6aed4c125ff0703a866c3147a02f0c6dd"
+checksum = "a2333e6df6d6598f2b1974829f853c2b4c5f4a6e503c10af918081aa6f8564e1"
 dependencies = [
  "serde",
 ]
@@ -2559,9 +2559,9 @@ dependencies = [
 
 [[package]]
 name = "tauri"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a27f85e61269f2bbefbe5e20e3ca4fab41390eb5b7c9717db8d9e725a66f9cf7"
+checksum = "421641ec549d34935530886151a42ce5ecbbb57beb30e5eec1b22f8e08e10ee9"
 dependencies = [
  "anyhow",
  "cocoa",
@@ -2583,7 +2583,7 @@ dependencies = [
  "rand 0.8.5",
  "raw-window-handle",
  "regex",
- "semver 1.0.11",
+ "semver 1.0.12",
  "serde",
  "serde_json",
  "serde_repr",
@@ -2606,14 +2606,14 @@ dependencies = [
 
 [[package]]
 name = "tauri-build"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9e478fc3fb927877a5017ce9f4b78457077e450356f7702f2a02800551322af5"
+checksum = "598bd36884ee15ac73dfca9921066fd87d13d9beea60384b99a66c3a5d800d70"
 dependencies = [
  "anyhow",
  "cargo_toml",
  "heck 0.4.0",
- "semver 1.0.11",
+ "semver 1.0.12",
  "serde_json",
  "tauri-utils",
  "winres",
@@ -2621,9 +2621,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-codegen"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9b11c52969592e6e420733987dff01f683270dbe63b8e5dc08e67f31421d6a78"
+checksum = "048a7b404b92c86e7dc32458fd0963f042a76d520681e6f598d73a97c2feeeef"
 dependencies = [
  "base64",
  "brotli",
@@ -2633,7 +2633,7 @@ dependencies = [
  "proc-macro2",
  "quote",
  "regex",
- "semver 1.0.11",
+ "semver 1.0.12",
  "serde",
  "serde_json",
  "sha2",
@@ -2646,9 +2646,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-macros"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "05891975005cd3c4d4b49cd23a2cfe79a3e7b4a2a35f1a91b5422836771180a7"
+checksum = "aaf70098bfab21efde9b2c089008b319ba333f4ee6e55c38bdea188dea86497f"
 dependencies = [
  "heck 0.4.0",
  "proc-macro2",
@@ -2660,9 +2660,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0d5bcd2904326625080920568720e1ec9ee2bdc470da768510515206eb777a2"
+checksum = "82d34f58c61a6790ba3de5753daea61b5beb6926b2384d1ad03b9dfe622c72be"
 dependencies = [
  "gtk",
  "http",
@@ -2680,9 +2680,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-runtime-wry"
-version = "0.10.0"
+version = "0.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6690c56286f30ea4928b21e0fa015b3ba616b895df91f303b0d4c4a754ee769"
+checksum = "cd9a56e25146ff1f13f37bdb010ed0d692e7e81c824b9f977ae439f446f37ab4"
 dependencies = [
  "cocoa",
  "gtk",
@@ -2700,9 +2700,9 @@ dependencies = [
 
 [[package]]
 name = "tauri-utils"
-version = "1.0.1"
+version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8dfceaee3eb5369fd140ffe7f7c4cd7b44d2eb2f57513ef7e37e8d1ec587b983"
+checksum = "616f178da1e0466ca45963ed108a1567d4b8803662addaca313169d0dcd97715"
 dependencies = [
  "brotli",
  "ctor",
@@ -2715,7 +2715,7 @@ dependencies = [
  "phf 0.10.1",
  "proc-macro2",
  "quote",
- "semver 1.0.11",
+ "semver 1.0.12",
  "serde",
  "serde_json",
  "serde_with",
@@ -2879,13 +2879,13 @@ dependencies = [
 
 [[package]]
 name = "tracing-subscriber"
-version = "0.3.12"
+version = "0.3.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cfbbce75cad20b56f4f4200e413b894c990c7bbd7e47245ff5cbc2b82511e4da"
+checksum = "4bc28f93baff38037f64e6f43d34cfa1605f27a49c34e8a04c5e78b0babf2596"
 dependencies = [
  "ansi_term",
+ "lazy_static",
  "matchers",
- "once_cell",
  "regex",
  "sharded-slab",
  "smallvec",
