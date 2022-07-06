@@ -24,7 +24,7 @@ jobs:
       - name: Install app dependencies
         run: npm ci
       - name: Build the app
-        run: npm run tauri build -- --target x86_64-pc-windows-msvc -- -Z build-std=core,std,alloc,proc_macro,panic_abort -Z build-std-features=panic_immediate_abort
+        run: npm run tauri build -- --target x86_64-pc-windows-msvc -- -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
       - name: Upload artifacts
         uses: softprops/action-gh-release@v1
         with:

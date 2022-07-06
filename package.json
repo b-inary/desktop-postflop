@@ -9,7 +9,7 @@
     "tauri": "tauri"
   },
   "dependencies": {
-    "@tauri-apps/api": "^1.0.1",
+    "@tauri-apps/api": "^1.0.2",
     "dexie": "^3.2.2",
     "pinia": "^2.0.14",
     "vue": "^3.2.37"
@@ -17,14 +17,14 @@
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.1.4",
     "@tailwindcss/forms": "^0.5.2",
-    "@tauri-apps/cli": "^1.0.2",
-    "@types/node": "^18.0.0",
+    "@tauri-apps/cli": "^1.0.3",
+    "@types/node": "^18.0.3",
     "@vitejs/plugin-vue": "^2.3.3",
     "@vue/eslint-config-prettier": "^7.0.0",
     "@vue/eslint-config-typescript": "^11.0.0",
     "autoprefixer": "^10.4.7",
-    "eslint": "^8.18.0",
-    "eslint-plugin-vue": "^9.1.1",
+    "eslint": "^8.19.0",
+    "eslint-plugin-vue": "^9.2.0",
     "postcss": "^8.4.14",
     "tailwindcss": "^3.1.4",
     "typescript": "^4.7.4",
