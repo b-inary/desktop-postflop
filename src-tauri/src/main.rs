@@ -365,8 +365,8 @@ fn game_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> GameResultsRes
     GameResultsResponse {
         weights: game.weights(player).to_vec(),
         weights_normalized: game.normalized_weights(player).to_vec(),
-        expected_values: game.expected_values(),
         equity: game.equity(player),
+        expected_values: game.expected_values_detail(),
         strategy: game.strategy(),
     }
 }

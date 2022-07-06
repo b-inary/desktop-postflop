@@ -84,7 +84,7 @@
                 ? 'ring-1 ring-red-600 border-red-600 '
                 : 'border-black ') +
               (item.depth === actionList.length
-                ? actionColorByStr[action.str]
+                ? actionColorByStr[action.str].bg
                 : 'bg-white')
             "
             :disabled="
@@ -150,131 +150,168 @@
           </div>
         </div>
 
-        <!--
-          "will-change-transform" somehow resolves Google Chrome scrolling issue
-          (But the issue revives when DevTools is open)
-        -->
-        <div
-          ref="divResultDetail"
-          class="ml-5 max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll will-change-transform"
-          @scroll.passive="onTableScroll"
-        >
-          <table class="align-middle divide-y divide-gray-300">
-            <thead class="sticky top-0 bg-gray-100 shadow">
-              <tr :style="{ height: 'calc(2rem + 1px)' }">
-                <th
-                  v-for="text in headers"
-                  :key="text"
-                  scope="col"
-                  :class="
-                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                    (text === 'Hand'
-                      ? 'min-w-[5rem]'
-                      : text === 'EV'
-                      ? 'min-w-[3.4rem]'
-                      : 'min-w-[3.7rem]')
-                  "
-                  @click="sortBy(text)"
-                >
-                  <span
-                    v-if="text === sortKey.key"
-                    class="inline-block mr-0.5 text-xs"
+        <div class="ml-5">
+          <div
+            ref="divResultDetail"
+            class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-x-auto overflow-y-scroll will-change-transform"
+            @scroll.passive="onTableScroll"
+          >
+            <table class="align-middle divide-y divide-gray-300">
+              <thead class="sticky top-0 bg-gray-100 shadow z-10">
+                <tr :style="{ height: 'calc(2rem + 1px)' }">
+                  <th
+                    v-for="text in headers"
+                    :key="text"
+                    scope="col"
+                    :class="
+                      'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                      (text === 'Hand'
+                        ? 'min-w-[5rem]'
+                        : text === 'EV'
+                        ? 'min-w-[3.4rem]'
+                        : 'min-w-[3.7rem]')
+                    "
+                    @click="sortBy(text)"
                   >
-                    {{ sortKey.order === "asc" ? "▲" : "▼" }}
-                  </span>
-                  {{
-                    text
-                      .replace("Bet", "B")
-                      .replace("Raise", "R")
-                      .replace("All-in", "A")
-                  }}
-                </th>
-              </tr>
-            </thead>
-
-            <tbody class="bg-white divide-y divide-gray-300">
-              <!-- Top empty row -->
-              <tr
-                v-if="emptyBufferTop > 0"
-                :style="{
-                  '--empty-buffer-top': emptyBufferTop,
-                  height: 'calc(var(--empty-buffer-top) * (2rem + 1px))',
-                }"
-              >
-                <td :colspan="headers.length"></td>
-              </tr>
-
-              <!-- Body -->
-              <tr
-                v-for="item in resultRendered"
-                :key="item.card1 + '-' + item.card2"
-                class="text-right text-sm"
-                :style="{ height: 'calc(2rem + 1px)' }"
-              >
-                <td class="px-2.5 text-center">
-                  <template
-                    v-for="card in [item.card1, item.card2].map(cardText)"
-                    :key="card.rank + card.suit"
-                  >
-                    <span :class="card.colorClass">
-                      {{ card.rank + card.suit }}
+                    <span
+                      v-if="text === sortKey.key"
+                      class="inline-block mr-0.5 text-xs"
+                    >
+                      {{ sortKey.order === "asc" ? "▲" : "▼" }}
                     </span>
-                  </template>
-                </td>
-                <td class="px-2.5">
-                  {{ percentStr(item.weight) }}
-                </td>
-                <td class="px-2.5">
-                  {{ percentStr(item.equity) }}
-                </td>
-                <td class="px-2.5">
-                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
-                </td>
-                <td v-for="i in item.strategy.length" :key="i" class="px-2.5">
-                  {{ percentStr(item.strategy[i - 1]) }}
-                </td>
-              </tr>
+                    {{
+                      text
+                        .replace("Bet", "B")
+                        .replace("Raise", "R")
+                        .replace("All-in", "A")
+                    }}
+                  </th>
+                </tr>
+              </thead>
 
-              <!-- Bottom empty row -->
-              <tr
-                v-if="emptyBufferBottom > 0"
-                :style="{
-                  '--empty-buffer-bottom': emptyBufferBottom,
-                  height: 'calc(var(--empty-buffer-bottom) * (2rem + 1px))',
-                }"
-              >
-                <td :colspan="headers.length"></td>
-              </tr>
-            </tbody>
-
-            <tfoot class="sticky bottom-0 font-bold bg-white shadow">
-              <tr
-                class="text-right text-sm"
-                :style="{ height: 'calc(2rem + 1px)' }"
-              >
-                <th scope="col" class="px-2.5 text-center underline">
-                  {{ hoveredCellText }}
-                </th>
-                <th scope="col" class="px-2.5">
-                  {{ resultAverage.combos }}
-                </th>
-                <th scope="col" class="px-2.5">
-                  {{ resultAverage.equity }}
-                </th>
-                <th scope="col" class="px-2.5">
-                  {{ resultAverage.expectedValue }}
-                </th>
-                <th
-                  v-for="i in resultAverage.strategy.length"
-                  :key="i"
-                  scope="col"
-                  class="px-2.5"
+              <tbody class="bg-white divide-y divide-gray-300">
+                <!-- Top empty row -->
+                <tr
+                  v-if="emptyBufferTop > 0"
+                  :style="{
+                    '--num-rows': emptyBufferTop,
+                    '--row-height': showActionEv ? '2.6rem' : '2rem',
+                    height: 'calc(var(--num-rows) * (var(--row-height) + 1px))',
+                  }"
                 >
-                  {{ resultAverage.strategy[i - 1] }}
-                </th>
-              </tr>
-            </tfoot>
-          </table>
+                  <td :colspan="headers.length"></td>
+                </tr>
+
+                <!-- Body -->
+                <tr
+                  v-for="item in resultRendered"
+                  :key="item.card1 + '-' + item.card2"
+                  class="text-right text-sm"
+                  :style="{
+                    '--row-height': showActionEv ? '2.6rem' : '2rem',
+                    height: 'calc(var(--row-height) + 1px)',
+                  }"
+                >
+                  <td class="px-2.5 text-center">
+                    <template
+                      v-for="card in [item.card1, item.card2].map(cardText)"
+                      :key="card.rank + card.suit"
+                    >
+                      <span :class="card.colorClass">
+                        {{ card.rank + card.suit }}
+                      </span>
+                    </template>
+                  </td>
+                  <td class="px-2.5">
+                    {{ percentStr(item.weight) }}
+                  </td>
+                  <td class="px-2.5">
+                    {{ percentStr(item.equity) }}
+                  </td>
+                  <td class="px-2.5">
+                    {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
+                  </td>
+                  <td
+                    v-for="i in item.strategy.length"
+                    :key="i"
+                    :class="
+                      'relative px-2.5 ' + (showActionEv ? 'leading-4' : '')
+                    "
+                  >
+                    {{ percentStr(item.strategy[i - 1]) }}
+                    <span v-if="showActionEv" class="block text-xs">
+                      ({{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }})
+                    </span>
+                    <div
+                      class="absolute bottom-0 left-2.5 h-1 bg-gray-400"
+                      style="width: calc(100% - 1.25rem)"
+                    ></div>
+                    <div
+                      :class="
+                        'absolute bottom-0 left-2.5 h-1 ' +
+                        actionColor[i - 1].bar
+                      "
+                      :style="`width: calc((100% - 1.25rem) * ${
+                        item.strategy[i - 1]
+                      }`"
+                    ></div>
+                  </td>
+                </tr>
+
+                <!-- Bottom empty row -->
+                <tr
+                  v-if="emptyBufferBottom > 0"
+                  :style="{
+                    '--num-rows': emptyBufferBottom,
+                    '--row-height': showActionEv ? '2.6rem' : '2rem',
+                    height: 'calc(var(--num-rows) * (var(--row-height) + 1px))',
+                  }"
+                >
+                  <td :colspan="headers.length"></td>
+                </tr>
+              </tbody>
+
+              <tfoot class="sticky bottom-0 font-bold bg-white shadow">
+                <tr
+                  class="text-right text-sm"
+                  :style="{ height: 'calc(2rem + 1px)' }"
+                >
+                  <th scope="col" class="px-2.5 text-center underline">
+                    {{ hoveredCellText }}
+                  </th>
+                  <th scope="col" class="px-2.5">
+                    {{ resultAverage.combos }}
+                  </th>
+                  <th scope="col" class="px-2.5">
+                    {{ resultAverage.equity }}
+                  </th>
+                  <th scope="col" class="px-2.5">
+                    {{ resultAverage.expectedValue }}
+                  </th>
+                  <th
+                    v-for="i in resultAverage.strategy.length"
+                    :key="i"
+                    scope="col"
+                    class="px-2.5"
+                  >
+                    {{ resultAverage.strategy[i - 1] }}
+                  </th>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="mt-4">
+            <label class="cursor-pointer">
+              <input
+                v-model="showActionEv"
+                type="checkbox"
+                class="mr-1 align-middle rounded cursor-pointer"
+                @change.passive="onTableScroll"
+              />
+              Show action EV
+            </label>
+          </div>
         </div>
       </div>
     </div>
@@ -311,6 +348,7 @@ type Result = {
   weightNormalized: number;
   equity: number;
   expectedValue: number;
+  actionEv: number[];
   strategy: number[];
 };
 
@@ -354,6 +392,7 @@ export default defineComponent({
         weight: number;
         equity: number;
         expectedValue: number;
+        actionEv: number[];
         strategy: number[];
       }[]
     );
@@ -371,6 +410,8 @@ export default defineComponent({
 
     type Order = "asc" | "desc";
     const sortKey = ref({ key: "Hand", order: "desc" as Order });
+
+    const showActionEv = ref(false);
 
     store.$subscribe(async (_, store) => {
       if (store.isSolverFinished !== isSolverFinished.value) {
@@ -534,7 +575,7 @@ export default defineComponent({
       const {
         weights,
         weights_normalized: weightsNormalized,
-        expected_values: expectedValues,
+        expected_values: actionEv,
         equity,
         strategy,
       }: GameResultsResponse = await invoke("game_results");
@@ -544,18 +585,30 @@ export default defineComponent({
         div.scrollLeft = div.scrollWidth - div.clientWidth;
       }
 
-      result.value = Array.from({ length: cards.length }, (_, i) => ({
-        card1: cards[i] >> 8,
-        card2: cards[i] & 0xff,
-        weight: weights[i],
-        weightNormalized: weightsNormalized[i],
-        equity: equity[i],
-        expectedValue: expectedValues[i],
-        strategy: Array.from(
+      result.value = Array.from({ length: cards.length }, (_, i) => {
+        const a = Array.from(
           { length: numActions },
-          (_, j) => strategy[j * cards.length + i]
-        ).reverse(),
-      }));
+          (_, j) => actionEv[i + j * cards.length]
+        );
+
+        const s = Array.from(
+          { length: numActions },
+          (_, j) => strategy[i + j * cards.length]
+        );
+
+        const ev = a.map((v, j) => v * s[j]).reduce((acc, v) => acc + v, 0);
+
+        return {
+          card1: cards[i] >> 8,
+          card2: cards[i] & 0xff,
+          weight: weights[i],
+          weightNormalized: weightsNormalized[i],
+          equity: equity[i],
+          expectedValue: ev,
+          actionEv: a.reverse(),
+          strategy: s.reverse(),
+        };
+      });
 
       for (let i = 0; i < numActions; ++i) {
         const action = actionList.value[actionList.value.length - 1].actions[i];
@@ -578,11 +631,12 @@ export default defineComponent({
       const countCell = Array.from({ length: 13 * 13 }, () => 0);
       const equitySumCell = Array.from({ length: 13 * 13 }, () => 0);
       const expectedValueSumCell = Array.from({ length: 13 * 13 }, () => 0);
+      const actionEvSumCell = Array.from({ length: 13 * 13 }, () =>
+        Array.from({ length: numActions }, () => 0)
+      );
       const strategySumCell = Array.from({ length: 13 * 13 }, () =>
         Array.from({ length: numActions }, () => 0)
       );
-
-      const strategySum = Array.from({ length: numActions }, () => 0);
 
       for (let i = 0; i < cards.length; ++i) {
         const card1 = cards[i] >> 8;
@@ -607,15 +661,15 @@ export default defineComponent({
         const idx = row * 13 + col;
 
         if (weightsNormalized[i] > 0 && weights[i] >= 0.05 / 100) {
+          const w = weightsNormalized[i];
           weightSumCell[idx] += weights[i];
-          weightNormalizedSumCell[idx] += weightsNormalized[i];
+          weightNormalizedSumCell[idx] += w;
           countCell[idx] += 1;
-          equitySumCell[idx] += weightsNormalized[i] * equity[i];
-          expectedValueSumCell[idx] += weightsNormalized[i] * expectedValues[i];
+          equitySumCell[idx] += w * equity[i];
+          expectedValueSumCell[idx] += w * result.value[i].expectedValue;
           for (let j = 0; j < numActions; ++j) {
-            const s = weightsNormalized[i] * result.value[i].strategy[j];
-            strategySumCell[idx][j] += s;
-            strategySum[j] += s;
+            actionEvSumCell[idx][j] += w * result.value[i].actionEv[j];
+            strategySumCell[idx][j] += w * result.value[i].strategy[j];
           }
         }
       }
@@ -625,6 +679,10 @@ export default defineComponent({
         count: countCell[i],
         equity: equitySumCell[i] / weightNormalizedSumCell[i],
         expectedValue: expectedValueSumCell[i] / weightNormalizedSumCell[i],
+        actionEv: Array.from(
+          { length: numActions },
+          (_, j) => actionEvSumCell[i][j] / weightNormalizedSumCell[i]
+        ),
         strategy: Array.from(
           { length: numActions },
           (_, j) => strategySumCell[i][j] / weightNormalizedSumCell[i]
@@ -692,13 +750,15 @@ export default defineComponent({
       for (let i = 0; i < actions.length; ++i) {
         let color;
         if (actions[i] === "Fold") {
-          color = "bg-sky-300";
+          color = { bg: "bg-sky-300", bar: "bg-sky-400" };
         } else if (actions[i] === "Check" || actions[i] === "Call") {
-          color = "bg-green-300";
+          color = { bg: "bg-green-300", bar: "bg-green-400" };
         } else {
-          color = ["bg-amber-300", "bg-pink-300", "bg-violet-300"][
-            (actions.length - subtract - i - 1) % 3
-          ];
+          color = [
+            { bg: "bg-amber-300", bar: "bg-amber-400" },
+            { bg: "bg-pink-300", bar: "bg-pink-400" },
+            { bg: "bg-violet-300", bar: "bg-violet-400" },
+          ][(actions.length - subtract - i - 1) % 3];
         }
         ret.push(color);
       }
@@ -707,7 +767,7 @@ export default defineComponent({
     });
 
     const actionColorByStr = computed(() => {
-      const ret = {} as { [key: string]: string };
+      const ret = {} as { [key: string]: { bg: string; bar: string } };
       const actions = nextActionsStr.value;
       for (let i = 0; i < actions.length; ++i) {
         ret[actions[i]] = actionColor.value[i];
@@ -756,7 +816,7 @@ export default defineComponent({
         const left = strategy.slice(0, i).reduce((a, b) => a + b, 0);
         return {
           key: i,
-          class: actionColor.value[i],
+          class: actionColor.value[i].bg,
           style: {
             width: percentStr(1 - left),
             zIndex: i,
@@ -991,7 +1051,7 @@ export default defineComponent({
         .replace("px", "")
     );
 
-    const rowHeight = 2 * rem + 1;
+    const rowHeight = computed(() => (showActionEv.value ? 2.6 : 2) * rem + 1);
 
     let ticking = false;
 
@@ -1004,7 +1064,7 @@ export default defineComponent({
         ticking = false;
         if (!divResultDetail.value) return;
         const { scrollTop } = divResultDetail.value;
-        const topIndex = Math.max(scrollTop / rowHeight, 0);
+        const topIndex = Math.max(scrollTop / rowHeight.value, 0);
         let update = false;
         if (topIndex < emptyBufferTop.value + bufferUnit) {
           update = true;
@@ -1025,18 +1085,20 @@ export default defineComponent({
     };
 
     return {
-      store,
       cardText,
+      store,
       divResultNav,
       divResultDetail,
-      nodeInformation,
-      board,
       actionList,
+      nodeInformation,
       sortKey,
-      sortBy,
+      showActionEv,
+      board,
       percentStr,
       trimMinusZero,
+      sortBy,
       moveResult,
+      actionColor,
       actionColorByStr,
       weightPercent,
       cellItems,
