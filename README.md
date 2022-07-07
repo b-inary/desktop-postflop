@@ -42,9 +42,11 @@ You can download the installer (.msi) or the portable executable (.exe) from the
 [GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
 
 - The installer version automatically installs dependent runtimes.
-- To launch the portable version, the [WebView2] runtime needs to be installed (on Windows 11, WebView2 is preinstalled).
+- To launch the portable version, the WebView2 runtime needs to be installed.
+  - Please download and run the Evergreen Bootstrapper from [Microsoft's website].
+  - Note: WebView2 is pre-installed in Windows 11
 
-[WebView2]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
+[Microsoft's website]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
 
 ## Uninstall
 
