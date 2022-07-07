@@ -475,7 +475,9 @@ export default defineComponent({
       });
 
       currentIteration.value = 0;
-      exploitabilityUpdated = false;
+      exploitability.value = Math.max(await invoke("game_exploitability"), 0);
+      exploitabilityUpdated = true;
+
       await resumeSolver();
     };
 
