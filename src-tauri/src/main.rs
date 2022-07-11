@@ -45,9 +45,9 @@ fn main() {
             game_apply_history,
             game_available_actions,
             game_is_terminal_action,
-            game_possible_cards,
             game_current_player,
-            game_results
+            game_results,
+            game_chance_report
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
@@ -293,17 +293,24 @@ fn game_finalize(
     pool_manager
         .pool
         .install(|| finalize(&mut *game_state.lock().unwrap()));
-    game_state.lock().unwrap().cache_normalized_weights();
 }
 
 #[tauri::command]
-fn game_apply_history(history: Vec<u32>, game_state: tauri::State<Mutex<PostFlopGame>>) {
+fn game_apply_history(history: Vec<usize>, game_state: tauri::State<Mutex<PostFlopGame>>) {
     let mut game = game_state.lock().unwrap();
-    game.back_to_root();
-    for &action in &history {
-        game.play(action as usize);
+    game.apply_history(&history);
+}
+
+fn action_to_string(action: Action) -> String {
+    match action {
+        Action::Fold => "Fold".to_string(),
+        Action::Check => "Check".to_string(),
+        Action::Call => "Call".to_string(),
+        Action::Bet(size) => format!("Bet {}", size),
+        Action::Raise(size) => format!("Raise {}", size),
+        Action::AllIn(size) => format!("All-in {}", size),
+        _ => unreachable!(),
     }
-    game.cache_normalized_weights();
 }
 
 #[tauri::command]
@@ -314,15 +321,7 @@ fn game_available_actions(game_state: tauri::State<Mutex<PostFlopGame>>) -> Vec<
     } else {
         game.available_actions()
             .iter()
-            .map(|&x| match x {
-                Action::Fold => "Fold".to_string(),
-                Action::Check => "Check".to_string(),
-                Action::Call => "Call".to_string(),
-                Action::Bet(size) => format!("Bet {}", size),
-                Action::Raise(size) => format!("Raise {}", size),
-                Action::AllIn(size) => format!("All-in {}", size),
-                _ => unreachable!(),
-            })
+            .map(|&a| action_to_string(a))
             .collect()
     }
 }
@@ -337,12 +336,6 @@ fn game_is_terminal_action(game_state: tauri::State<Mutex<PostFlopGame>>) -> u32
 }
 
 #[tauri::command]
-fn game_possible_cards(game_state: tauri::State<Mutex<PostFlopGame>>) -> u64 {
-    let game = game_state.lock().unwrap();
-    game.possible_cards()
-}
-
-#[tauri::command]
 fn game_current_player(game_state: tauri::State<Mutex<PostFlopGame>>) -> usize {
     let game = game_state.lock().unwrap();
     game.current_player()
@@ -352,15 +345,16 @@ fn game_current_player(game_state: tauri::State<Mutex<PostFlopGame>>) -> usize {
 struct GameResultsResponse {
     weights: Vec<f32>,
     weights_normalized: Vec<f32>,
-    expected_values: Vec<f32>,
     equity: Vec<f32>,
+    expected_values: Vec<f32>,
     strategy: Vec<f32>,
 }
 
 #[tauri::command]
 fn game_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> GameResultsResponse {
-    let game = game_state.lock().unwrap();
+    let mut game = game_state.lock().unwrap();
     let player = game.current_player();
+    game.cache_normalized_weights();
 
     GameResultsResponse {
         weights: game.weights(player).to_vec(),
@@ -368,5 +362,63 @@ fn game_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> GameResultsRes
         equity: game.equity(player),
         expected_values: game.expected_values_detail(),
         strategy: game.strategy(),
+    }
+}
+
+#[derive(serde::Serialize)]
+struct ChanceReportResponse {
+    possible_cards: u64,
+    available_actions: Vec<String>,
+    equity: Vec<f32>,
+    expected_values: Vec<f32>,
+    strategy: Vec<f32>,
+}
+
+#[tauri::command]
+fn game_chance_report(game_state: tauri::State<Mutex<PostFlopGame>>) -> ChanceReportResponse {
+    let mut game = game_state.lock().unwrap();
+    let history = game.history().to_vec();
+    let possible_cards = game.possible_cards();
+
+    let first_action = possible_cards.trailing_zeros() as usize;
+    game.play(first_action);
+    let available_actions = game.available_actions();
+    game.apply_history(&history);
+
+    let num_actions = available_actions.len();
+    let num_private_hands = game.num_private_hands(0);
+
+    let mut equity = vec![0.0; 52];
+    let mut expected_values = vec![0.0; 52];
+    let mut strategy = vec![0.0; 52 * num_actions];
+
+    for i in 0..52 {
+        if possible_cards & (1 << i) != 0 {
+            game.play(i);
+            game.cache_normalized_weights();
+            let weights = game.normalized_weights(0);
+            let node_strategy = game.strategy();
+            equity[i] = compute_average(&game.equity(0), weights);
+            expected_values[i] = compute_average(&game.expected_values(), weights);
+            for j in 0..num_actions {
+                let start = j * num_private_hands;
+                let end = (j + 1) * num_private_hands;
+                strategy[i + j * 52] = compute_average(&node_strategy[start..end], weights);
+            }
+            game.apply_history(&history);
+        }
+    }
+
+    let available_actions = available_actions
+        .iter()
+        .map(|&a| action_to_string(a))
+        .collect();
+
+    ChanceReportResponse {
+        possible_cards,
+        available_actions,
+        equity,
+        expected_values,
+        strategy,
     }
 }

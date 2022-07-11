@@ -311,20 +311,109 @@
         actionList.length > 0 &&
         actionList[actionList.length - 1].type !== 'Player'
       "
-      class="mt-5"
+      class="flex mt-5 items-start"
     >
-      <div v-for="suit in 4" :key="suit" class="flex">
-        <board-selector-card
-          v-for="rank in 13"
-          :key="rank"
-          class="m-1 disabled:opacity-40"
-          :card-id="56 - 4 * rank - suit"
-          :disabled="
-            actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
-              .isTerminal
-          "
-          @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
-        />
+      <div class="shrink-0">
+        <div v-for="suit in 4" :key="suit" class="flex">
+          <board-selector-card
+            v-for="rank in 13"
+            :key="rank"
+            class="m-1 disabled:opacity-40"
+            :card-id="56 - 4 * rank - suit"
+            :disabled="
+              actionList[actionList.length - 1].actions[56 - 4 * rank - suit]
+                .isTerminal
+            "
+            @click="moveResult(actionList.length, 56 - 4 * rank - suit)"
+          />
+        </div>
+
+        <div class="mt-4">
+          <label class="cursor-pointer">
+            <input
+              v-model="showOopStats"
+              type="checkbox"
+              class="mr-1 align-middle rounded cursor-pointer"
+            />
+            Show OOP statistics
+          </label>
+        </div>
+      </div>
+
+      <!-- Turn/River report -->
+      <div v-if="showOopStats" class="pl-5 pb-1 overflow-x-auto">
+        <span class="underline">OOP statistics:</span>
+        <div
+          class="mt-3 max-h-[24rem] border border-gray-500 rounded-md shadow overflow-y-scroll"
+        >
+          <table class="align-middle divide-y divide-gray-300">
+            <thead class="sticky top-0 bg-gray-100 shadow z-10">
+              <tr style="height: calc(2rem + 1px)">
+                <th
+                  v-for="text in headersChance"
+                  :key="text"
+                  scope="col"
+                  :class="
+                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    (text === 'Card'
+                      ? 'min-w-[3.5rem]'
+                      : text === 'EV'
+                      ? 'min-w-[3.3rem]'
+                      : 'min-w-[3.6rem]')
+                  "
+                  @click="sortByChance(text)"
+                >
+                  <span
+                    v-if="text === sortKeyChance.key"
+                    class="inline-block text-xs"
+                  >
+                    {{ sortKeyChance.order === "asc" ? "▲" : "▼" }}
+                  </span>
+                  {{
+                    text
+                      .replace("Card", actionList[actionList.length - 1].type)
+                      .replace("Bet", "B")
+                      .replace("Raise", "R")
+                      .replace("All-in", "A")
+                  }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white divide-y divide-gray-300">
+              <tr
+                v-for="item in resultChanceSorted"
+                :key="item.card"
+                class="text-right text-sm"
+                style="height: calc(2rem + 1px)"
+              >
+                <td class="px-[0.5625rem] text-center">
+                  <template
+                    v-for="card in [cardText(item.card)]"
+                    :key="card.rank + card.suit"
+                  >
+                    <span :class="card.colorClass">
+                      {{ card.rank + card.suit }}
+                    </span>
+                  </template>
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ percentStr(item.equity) }}
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
+                </td>
+                <td
+                  v-for="i in item.strategy.length"
+                  :key="i"
+                  class="px-[0.5625rem]"
+                >
+                  {{ percentStr(item.strategy[i - 1]) }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   </div>
@@ -345,6 +434,13 @@ type Result = {
   equity: number;
   expectedValue: number;
   actionEv: number[];
+  strategy: number[];
+};
+
+type ResultChance = {
+  card: number;
+  equity: number;
+  expectedValue: number;
   strategy: number[];
 };
 
@@ -393,6 +489,8 @@ export default defineComponent({
       }[]
     );
 
+    const resultChance = ref([] as ResultChance[]);
+
     const nodeInformation = ref(
       {} as {
         player: number;
@@ -406,8 +504,12 @@ export default defineComponent({
 
     type Order = "asc" | "desc";
     const sortKey = ref({ key: "Hand", order: "desc" as Order });
+    const sortKeyChance = ref({ key: "Card", order: "desc" as Order });
 
     const showActionEv = ref(false);
+    const showOopStats = ref(false);
+
+    const chanceNextActions = ref([] as string[]);
 
     store.$subscribe(async (_, store) => {
       if (store.isSolverFinished !== isSolverFinished.value) {
@@ -456,11 +558,20 @@ export default defineComponent({
       sortKey.value = { key, order };
     };
 
+    const sortByChance = (key: string) => {
+      const order: Order =
+        key === sortKeyChance.value.key && sortKeyChance.value.order === "desc"
+          ? "asc"
+          : "desc";
+      sortKeyChance.value = { key, order };
+    };
+
     const clearResult = () => {
       handCards.value = [[], []];
       actionList.value = [];
       result.value = [];
       resultCell.value = [];
+      resultChance.value = [];
     };
 
     const updateResult = async (depth: number, isFirstCall: boolean) => {
@@ -480,9 +591,25 @@ export default defineComponent({
       const isChance = nextActions[0] === "Chance";
 
       if (isChance) {
-        const possibleCards: number = await invoke("game_possible_cards");
+        type ChanceReportResponse = {
+          possible_cards: number;
+          available_actions: string[];
+          equity: number[];
+          expected_values: number[];
+          strategy: number[];
+        };
+
+        const {
+          possible_cards: possibleCards,
+          available_actions: actions,
+          equity,
+          expected_values: expectedValues,
+          strategy,
+        }: ChanceReportResponse = await invoke("game_chance_report");
+
         const possibleCardsBigInt = BigInt(possibleCards);
 
+        // update actionList
         actionList.value.splice(depth, actionList.value.length, {
           type: "River",
           selectedIndex: -1,
@@ -499,7 +626,25 @@ export default defineComponent({
           actionList.value[actionList.value.length - 1].type = "Turn";
         }
 
-        isLocked = false;
+        const numActions = actions.length;
+        chanceNextActions.value = actions.reverse();
+
+        // update resultChance
+        resultChance.value = [];
+        for (let i = 0; i < 52; ++i) {
+          if (!(possibleCardsBigInt & (1n << BigInt(i)))) continue;
+          resultChance.value.push({
+            card: i,
+            equity: equity[i],
+            expectedValue: expectedValues[i],
+            strategy: Array.from(
+              { length: numActions },
+              (_, j) => strategy[i + j * 52]
+            ).reverse(),
+          });
+        }
+
+        updateResultFinal();
         return;
       }
 
@@ -512,16 +657,16 @@ export default defineComponent({
       type GameResultsResponse = {
         weights: number[];
         weights_normalized: number[];
-        expected_values: number[];
         equity: number[];
+        expected_values: number[];
         strategy: number[];
       };
 
       const {
         weights,
         weights_normalized: weightsNormalized,
-        expected_values: actionEv,
         equity,
+        expected_values: actionEv,
         strategy,
       }: GameResultsResponse = await invoke("game_results");
 
@@ -692,7 +837,19 @@ export default defineComponent({
         div.scrollLeft = div.scrollWidth - div.clientWidth;
       }
 
+      updateResultFinal();
+    };
+
+    const updateResultFinal = () => {
       isLocked = false;
+
+      if (!["Hand", "Weight", "EQ", "EV"].includes(sortKey.value.key)) {
+        sortKey.value = { key: "Hand", order: "desc" };
+      }
+
+      if (!["Card", "EQ", "EV"].includes(sortKeyChance.value.key)) {
+        sortKeyChance.value = { key: "Card", order: "desc" };
+      }
     };
 
     const moveResult = async (depth: number, index: number) => {
@@ -724,10 +881,6 @@ export default defineComponent({
       const history = actionList.value
         .slice(0, depth)
         .map((item) => item.actions[item.selectedIndex].index);
-
-      if (!["Hand", "Weight", "EQ", "EV"].includes(sortKey.value.key)) {
-        sortKey.value = { key: "Hand", order: "desc" };
-      }
 
       await invoke("game_apply_history", { history });
       await updateResult(depth, false);
@@ -881,6 +1034,10 @@ export default defineComponent({
       return ["Hand", "Weight", "EQ", "EV"].concat(nextActionsStr.value);
     });
 
+    const headersChance = computed(() => {
+      return ["Card", "EQ", "EV"].concat(chanceNextActions.value);
+    });
+
     const resultFiltered = ref([] as Result[]);
     const resultSorted = ref([] as Result[]);
     const resultAverage = ref({
@@ -962,10 +1119,10 @@ export default defineComponent({
         );
       };
 
+      const coef = sortKey.value.order === "asc" ? 1 : -1;
       const round = (x: number) => Math.round(10 * x);
 
       resultSorted.value = [...resultFiltered.value].sort((a, b) => {
-        const coef = sortKey.value.order === "asc" ? 1 : -1;
         if (sortKey.value.key === "Hand") {
           return rankComparator(
             a.card1,
@@ -1087,6 +1244,47 @@ export default defineComponent({
       });
     };
 
+    const resultChanceSorted = ref([] as ResultChance[]);
+
+    // update resultChanceSorted
+    watch([resultChance, sortKeyChance], () => {
+      const rankComparator = (a: number, b: number, order: Order) => {
+        const coef = order === "asc" ? 1 : -1;
+        const ar = Math.floor(a / 4);
+        const as = a % 4;
+        const br = Math.floor(b / 4);
+        const bs = b % 4;
+        return coef * (ar - br) || bs - as;
+      };
+
+      const coef = sortKeyChance.value.order === "asc" ? 1 : -1;
+      const round = (x: number) => Math.round(10 * x);
+
+      resultChanceSorted.value = [...resultChance.value].sort((a, b) => {
+        if (sortKeyChance.value.key === "Card") {
+          return rankComparator(a.card, b.card, sortKeyChance.value.order);
+        } else {
+          const fallback = rankComparator(a.card, b.card, "desc");
+          if (sortKeyChance.value.key === "EQ") {
+            const av = round(100 * a.equity);
+            const bv = round(100 * b.equity);
+            return coef * (av - bv) || fallback;
+          } else if (sortKeyChance.value.key === "EV") {
+            const av = round(a.expectedValue);
+            const bv = round(b.expectedValue);
+            return coef * (av - bv) || fallback;
+          } else {
+            const idx = chanceNextActions.value.indexOf(
+              sortKeyChance.value.key
+            );
+            const av = round(100 * a.strategy[idx]);
+            const bv = round(100 * b.strategy[idx]);
+            return coef * (av - bv) || fallback;
+          }
+        }
+      });
+    });
+
     return {
       cardText,
       store,
@@ -1095,11 +1293,14 @@ export default defineComponent({
       actionList,
       nodeInformation,
       sortKey,
+      sortKeyChance,
       showActionEv,
+      showOopStats,
       board,
       percentStr,
       trimMinusZero,
       sortBy,
+      sortByChance,
       moveResult,
       actionColor,
       actionColorByStr,
@@ -1111,11 +1312,13 @@ export default defineComponent({
       onMouseLeave,
       hoveredCellText,
       headers,
+      headersChance,
       resultAverage,
       resultRendered,
       emptyBufferTop,
       emptyBufferBottom,
       onTableScroll,
+      resultChanceSorted,
     };
   },
 });
