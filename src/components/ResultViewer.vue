@@ -101,222 +101,218 @@
 
     <div
       v-if="
-        actionList.length === 0 ||
+        actionList.length > 0 &&
         actionList[actionList.length - 1].type === 'Player'
       "
+      class="flex mt-5 items-start"
     >
-      <div class="flex mt-5 items-start">
-        <div class="shrink-0">
-          <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
-            <tr v-for="row in 13" :key="row" class="h-9">
-              <td
-                v-for="col in 13"
-                :key="col"
-                :class="
-                  'relative w-10 border-black select-none ' +
-                  (row === col ? 'border-2' : 'border')
-                "
-                @mouseenter="onMouseEnter(row, col)"
+      <div class="shrink-0">
+        <table class="ml-1 bg-gray-200 shadow" @mouseleave="onMouseLeave">
+          <tr v-for="row in 13" :key="row" class="h-9">
+            <td
+              v-for="col in 13"
+              :key="col"
+              :class="
+                'relative w-10 border-black select-none ' +
+                (row === col ? 'border-2' : 'border')
+              "
+              @mouseenter="onMouseEnter(row, col)"
+            >
+              <div
+                class="absolute bottom-0 left-0 w-full"
+                :style="{ height: weightPercent(row, col) }"
               >
                 <div
-                  class="absolute bottom-0 left-0 w-full"
-                  :style="{ height: weightPercent(row, col) }"
-                >
-                  <div
-                    v-for="item in cellItems(row, col)"
-                    :key="item.key"
-                    :class="'absolute top-0 right-0 h-full ' + item.class"
-                    :style="item.style"
-                  ></div>
-                </div>
-                <div class="absolute -top-px left-px z-50 text-sm">
-                  {{ cellText(row, col) }}
-                </div>
-                <div class="absolute -bottom-px right-px z-50 text-sm">
-                  {{ cellAuxText(row, col) }}
-                </div>
-              </td>
-            </tr>
-          </table>
+                  v-for="item in cellItems(row, col)"
+                  :key="item.key"
+                  :class="'absolute top-0 right-0 h-full ' + item.class"
+                  :style="item.style"
+                ></div>
+              </div>
+              <div class="absolute -top-px left-px z-50 text-sm">
+                {{ cellText(row, col) }}
+              </div>
+              <div class="absolute -bottom-px right-px z-50 text-sm">
+                {{ cellAuxText(row, col) }}
+              </div>
+            </td>
+          </tr>
+        </table>
 
-          <div class="mt-4">
-            Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
-            {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
-            {{
-              nodeInformation.toCall
-                ? " / To Call: " + nodeInformation.toCall
-                : ""
-            }}
-          </div>
+        <div class="mt-4">
+          Player: {{ nodeInformation.player === 0 ? "OOP" : "IP" }} / Pot:
+          {{ nodeInformation.pot }} / Stack: {{ nodeInformation.stack }}
+          {{
+            nodeInformation.toCall
+              ? " / To Call: " + nodeInformation.toCall
+              : ""
+          }}
+        </div>
+      </div>
+
+      <div class="pl-5 pb-1 overflow-x-auto">
+        <div
+          ref="divResultDetail"
+          class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-y-scroll will-change-transform"
+          @scroll.passive="onTableScroll"
+        >
+          <table class="align-middle divide-y divide-gray-300">
+            <thead class="sticky top-0 bg-gray-100 shadow z-10">
+              <tr style="height: calc(2rem + 1px)">
+                <th
+                  v-for="text in headers"
+                  :key="text"
+                  scope="col"
+                  :class="
+                    'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
+                    (text === 'Hand'
+                      ? 'min-w-[4.9rem]'
+                      : text === 'EV'
+                      ? 'min-w-[3.3rem]'
+                      : 'min-w-[3.6rem]')
+                  "
+                  @click="sortBy(text)"
+                >
+                  <span
+                    v-if="text === sortKey.key"
+                    class="inline-block text-xs"
+                  >
+                    {{ sortKey.order === "asc" ? "▲" : "▼" }}
+                  </span>
+                  {{
+                    text
+                      .replace("Bet", "B")
+                      .replace("Raise", "R")
+                      .replace("All-in", "A")
+                  }}
+                </th>
+              </tr>
+            </thead>
+
+            <tbody class="bg-white divide-y divide-gray-300">
+              <!-- Top empty row -->
+              <tr
+                v-if="emptyBufferTop > 0"
+                :style="{
+                  '--num-rows': emptyBufferTop,
+                  height: 'calc(var(--num-rows) * (2rem + 1px))',
+                }"
+              >
+                <td :colspan="headers.length"></td>
+              </tr>
+
+              <!-- Body -->
+              <tr
+                v-for="item in resultRendered"
+                :key="item.card1 + '-' + item.card2"
+                class="text-right text-sm"
+                style="height: calc(2rem + 1px)"
+              >
+                <td class="px-[0.5625rem] text-center">
+                  <template
+                    v-for="card in [item.card1, item.card2].map(cardText)"
+                    :key="card.rank + card.suit"
+                  >
+                    <span :class="card.colorClass">
+                      {{ card.rank + card.suit }}
+                    </span>
+                  </template>
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ percentStr(item.weight) }}
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ percentStr(item.equity) }}
+                </td>
+                <td class="px-[0.5625rem]">
+                  {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
+                </td>
+                <td
+                  v-for="i in item.strategy.length"
+                  :key="i"
+                  class="relative px-[0.5625rem]"
+                >
+                  <span v-if="!showActionEv">
+                    {{ percentStr(item.strategy[i - 1]) }}
+                  </span>
+                  <span v-else>
+                    {{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }}
+                  </span>
+                  <div
+                    class="absolute bottom-0 left-2 h-[0.3125rem] bg-gray-400"
+                    style="width: calc(100% - 1rem)"
+                  ></div>
+                  <div
+                    :class="
+                      'absolute bottom-0 left-2 h-[0.3125rem] ' +
+                      actionColor[i - 1].bar
+                    "
+                    :style="`width: calc((100% - 1rem) * ${
+                      item.strategy[i - 1]
+                    }`"
+                  ></div>
+                </td>
+              </tr>
+
+              <!-- Bottom empty row -->
+              <tr
+                v-if="emptyBufferBottom > 0"
+                :style="{
+                  '--num-rows': emptyBufferBottom,
+                  height: 'calc(var(--num-rows) * (2rem + 1px))',
+                }"
+              >
+                <td :colspan="headers.length"></td>
+              </tr>
+            </tbody>
+
+            <tfoot class="sticky bottom-0 font-bold bg-white shadow">
+              <tr class="text-right text-sm" style="height: calc(2rem + 1px)">
+                <th scope="col" class="px-[0.5625rem] text-center underline">
+                  {{ hoveredCellText }}
+                </th>
+                <th scope="col" class="px-[0.5625rem]">
+                  {{ resultAverage.combos }}
+                </th>
+                <th scope="col" class="px-[0.5625rem]">
+                  {{ resultAverage.equity }}
+                </th>
+                <th scope="col" class="px-[0.5625rem]">
+                  {{ resultAverage.expectedValue }}
+                </th>
+                <th
+                  v-for="i in resultAverage.strategy.length"
+                  :key="i"
+                  scope="col"
+                  class="px-[0.5625rem]"
+                >
+                  {{ resultAverage.strategy[i - 1] }}
+                </th>
+              </tr>
+            </tfoot>
+          </table>
         </div>
 
-        <div class="pl-5 pb-1 overflow-x-auto">
-          <div
-            ref="divResultDetail"
-            class="max-h-[30.25rem] border border-gray-500 rounded-md shadow overflow-y-scroll will-change-transform"
-            @scroll.passive="onTableScroll"
-          >
-            <table class="align-middle divide-y divide-gray-300">
-              <thead class="sticky top-0 bg-gray-100 shadow z-10">
-                <tr :style="{ height: 'calc(2rem + 1px)' }">
-                  <th
-                    v-for="text in headers"
-                    :key="text"
-                    scope="col"
-                    :class="
-                      'px-1 whitespace-nowrap text-sm font-bold cursor-pointer select-none ' +
-                      (text === 'Hand'
-                        ? 'min-w-[5rem]'
-                        : text === 'EV'
-                        ? 'min-w-[3.4rem]'
-                        : 'min-w-[3.7rem]')
-                    "
-                    @click="sortBy(text)"
-                  >
-                    <span
-                      v-if="text === sortKey.key"
-                      class="inline-block mr-0.5 text-xs"
-                    >
-                      {{ sortKey.order === "asc" ? "▲" : "▼" }}
-                    </span>
-                    {{
-                      text
-                        .replace("Bet", "B")
-                        .replace("Raise", "R")
-                        .replace("All-in", "A")
-                    }}
-                  </th>
-                </tr>
-              </thead>
-
-              <tbody class="bg-white divide-y divide-gray-300">
-                <!-- Top empty row -->
-                <tr
-                  v-if="emptyBufferTop > 0"
-                  :style="{
-                    '--num-rows': emptyBufferTop,
-                    '--row-height': showActionEv ? '2.6rem' : '2rem',
-                    height: 'calc(var(--num-rows) * (var(--row-height) + 1px))',
-                  }"
-                >
-                  <td :colspan="headers.length"></td>
-                </tr>
-
-                <!-- Body -->
-                <tr
-                  v-for="item in resultRendered"
-                  :key="item.card1 + '-' + item.card2"
-                  class="text-right text-sm"
-                  :style="{
-                    '--row-height': showActionEv ? '2.6rem' : '2rem',
-                    height: 'calc(var(--row-height) + 1px)',
-                  }"
-                >
-                  <td class="px-2.5 text-center">
-                    <template
-                      v-for="card in [item.card1, item.card2].map(cardText)"
-                      :key="card.rank + card.suit"
-                    >
-                      <span :class="card.colorClass">
-                        {{ card.rank + card.suit }}
-                      </span>
-                    </template>
-                  </td>
-                  <td class="px-2.5">
-                    {{ percentStr(item.weight) }}
-                  </td>
-                  <td class="px-2.5">
-                    {{ percentStr(item.equity) }}
-                  </td>
-                  <td class="px-2.5">
-                    {{ trimMinusZero(item.expectedValue.toFixed(1)) }}
-                  </td>
-                  <td
-                    v-for="i in item.strategy.length"
-                    :key="i"
-                    :class="
-                      'relative px-2.5 ' + (showActionEv ? 'leading-4' : '')
-                    "
-                  >
-                    {{ percentStr(item.strategy[i - 1]) }}
-                    <span v-if="showActionEv" class="block text-xs">
-                      ({{ trimMinusZero(item.actionEv[i - 1].toFixed(1)) }})
-                    </span>
-                    <div
-                      class="absolute bottom-0 left-2.5 h-1 bg-gray-400"
-                      style="width: calc(100% - 1.25rem)"
-                    ></div>
-                    <div
-                      :class="
-                        'absolute bottom-0 left-2.5 h-1 ' +
-                        actionColor[i - 1].bar
-                      "
-                      :style="`width: calc((100% - 1.25rem) * ${
-                        item.strategy[i - 1]
-                      }`"
-                    ></div>
-                  </td>
-                </tr>
-
-                <!-- Bottom empty row -->
-                <tr
-                  v-if="emptyBufferBottom > 0"
-                  :style="{
-                    '--num-rows': emptyBufferBottom,
-                    '--row-height': showActionEv ? '2.6rem' : '2rem',
-                    height: 'calc(var(--num-rows) * (var(--row-height) + 1px))',
-                  }"
-                >
-                  <td :colspan="headers.length"></td>
-                </tr>
-              </tbody>
-
-              <tfoot class="sticky bottom-0 font-bold bg-white shadow">
-                <tr
-                  class="text-right text-sm"
-                  :style="{ height: 'calc(2rem + 1px)' }"
-                >
-                  <th scope="col" class="px-2.5 text-center underline">
-                    {{ hoveredCellText }}
-                  </th>
-                  <th scope="col" class="px-2.5">
-                    {{ resultAverage.combos }}
-                  </th>
-                  <th scope="col" class="px-2.5">
-                    {{ resultAverage.equity }}
-                  </th>
-                  <th scope="col" class="px-2.5">
-                    {{ resultAverage.expectedValue }}
-                  </th>
-                  <th
-                    v-for="i in resultAverage.strategy.length"
-                    :key="i"
-                    scope="col"
-                    class="px-2.5"
-                  >
-                    {{ resultAverage.strategy[i - 1] }}
-                  </th>
-                </tr>
-              </tfoot>
-            </table>
-          </div>
-
-          <div class="mt-4">
-            <label class="cursor-pointer">
-              <input
-                v-model="showActionEv"
-                type="checkbox"
-                class="mr-1 align-middle rounded cursor-pointer"
-                @change.passive="onTableScroll"
-              />
-              Show action EV
-            </label>
-          </div>
+        <div class="mt-4">
+          <label class="cursor-pointer">
+            <input
+              v-model="showActionEv"
+              type="checkbox"
+              class="mr-1 align-middle rounded cursor-pointer"
+            />
+            Show action EV
+          </label>
         </div>
       </div>
     </div>
 
-    <div v-else class="mt-5">
+    <div
+      v-else-if="
+        actionList.length > 0 &&
+        actionList[actionList.length - 1].type !== 'Player'
+      "
+      class="mt-5"
+    >
       <div v-for="suit in 4" :key="suit" class="flex">
         <board-selector-card
           v-for="rank in 13"
@@ -1058,7 +1054,7 @@ export default defineComponent({
         .replace("px", "")
     );
 
-    const rowHeight = computed(() => (showActionEv.value ? 2.6 : 2) * rem + 1);
+    const rowHeight = 2 * rem + 1;
 
     let ticking = false;
 
@@ -1071,7 +1067,7 @@ export default defineComponent({
         ticking = false;
         if (!divResultDetail.value) return;
         const { scrollTop } = divResultDetail.value;
-        const topIndex = Math.max(scrollTop / rowHeight.value, 0);
+        const topIndex = Math.max(scrollTop / rowHeight, 0);
         let update = false;
         if (topIndex < emptyBufferTop.value + bufferUnit) {
           update = true;
