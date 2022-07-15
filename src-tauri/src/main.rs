@@ -382,7 +382,11 @@ fn game_chance_report(game_state: tauri::State<Mutex<PostFlopGame>>) -> ChanceRe
 
     let first_action = possible_cards.trailing_zeros() as usize;
     game.play(first_action);
-    let available_actions = game.available_actions();
+    let available_actions = game
+        .available_actions()
+        .iter()
+        .map(|&a| action_to_string(a))
+        .collect::<Vec<_>>();
     game.apply_history(&history);
 
     let num_actions = available_actions.len();
@@ -408,11 +412,6 @@ fn game_chance_report(game_state: tauri::State<Mutex<PostFlopGame>>) -> ChanceRe
             game.apply_history(&history);
         }
     }
-
-    let available_actions = available_actions
-        .iter()
-        .map(|&a| action_to_string(a))
-        .collect();
 
     ChanceReportResponse {
         possible_cards,

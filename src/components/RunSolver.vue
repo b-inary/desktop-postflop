@@ -52,7 +52,7 @@
         of RAM
         {{
           memoryUsage <= 0.85 * availableMemory
-            ? "(fast)"
+            ? ""
             : memoryUsage <= 0.95 * availableMemory
             ? "(not recommended)"
             : "(out of memory)"
@@ -440,9 +440,10 @@ export default defineComponent({
         "game_memory_usage"
       );
 
-      if (memoryUsage.value <= 0.85 * availableMemory.value) {
-        isCompressionEnabled.value = false;
-      } else if (memoryUsageCompressed.value <= 0.95 * availableMemory.value) {
+      if (
+        memoryUsage.value > 0.85 * availableMemory.value &&
+        memoryUsageCompressed.value <= 0.95 * availableMemory.value
+      ) {
         isCompressionEnabled.value = true;
       }
 
