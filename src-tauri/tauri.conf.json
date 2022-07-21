@@ -7,7 +7,7 @@
   },
   "package": {
     "productName": "Desktop Postflop",
-    "version": "0.1.6"
+    "version": "0.1.7"
   },
   "tauri": {
     "allowlist": {
@@ -56,7 +56,7 @@
     },
     "windows": [
       {
-        "title": "Desktop Postflop v0.1.6",
+        "title": "Desktop Postflop v0.1.7",
         "resizable": true,
         "width": 1300,
         "height": 760,
