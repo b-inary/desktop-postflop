@@ -8,15 +8,15 @@ repository = "https://github.com/b-inary/desktop-postflop/tree/main/src-tauri"
 license = "AGPL-3.0-or-later"
 
 [build-dependencies]
-tauri-build = { version = "1.0.4", features = [] }
+tauri-build = { version = "1.2.0", features = [] }
 
 [dependencies]
 postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom-alloc"] }
 rayon = "1.5.3"
-serde = { version = "1.0.140", features = ["derive"] }
-serde_json = "1.0.82"
-sysinfo = "0.24.7"
-tauri = { version = "1.0.4", features = ["shell-open"] }
+serde = { version = "1.0.147", features = ["derive"] }
+serde_json = "1.0.87"
+sysinfo = "0.26.7"
+tauri = { version = "1.2.0", features = ["shell-open"] }
 
 [features]
 default = ["custom-protocol"]

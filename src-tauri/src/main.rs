@@ -79,13 +79,12 @@ fn range_update(payload: RangeUpdatePayload, range_state: tauri::State<Mutex<Ran
     let rank1 = 13 - payload.row;
     let rank2 = 13 - payload.col;
     if payload.row == payload.col {
-        range.set_weight_pair(rank1, payload.weight)
+        range.set_weight_pair(rank1, payload.weight);
     } else if payload.row < payload.col {
-        range.set_weight_suited(rank1, rank2, payload.weight)
+        range.set_weight_suited(rank1, rank2, payload.weight);
     } else {
-        range.set_weight_offsuit(rank1, rank2, payload.weight)
+        range.set_weight_offsuit(rank1, rank2, payload.weight);
     }
-    .unwrap();
 }
 
 #[derive(serde::Deserialize)]
@@ -100,7 +99,7 @@ fn range_from_string(
     range_state: tauri::State<Mutex<RangeManager>>,
 ) -> Option<String> {
     let range = &mut (range_state.lock().unwrap().0)[payload.player];
-    let result = Range::from_sanitized_ranges(payload.string.as_str());
+    let result = Range::from_sanitized_str(payload.string.as_str());
     if result.is_ok() {
         *range = result.unwrap();
         None
@@ -230,6 +229,8 @@ fn game_init(
             bet_sizes(&payload.oop_river_bet, &payload.oop_river_raise),
             bet_sizes(&payload.ip_river_bet, &payload.ip_river_raise),
         ],
+        turn_donk_sizes: None,
+        river_donk_sizes: None,
         add_all_in_threshold: payload.add_all_in_threshold,
         force_all_in_threshold: payload.force_all_in_threshold,
         adjust_last_two_bet_sizes: payload.adjust_last_two_bet_sizes,
