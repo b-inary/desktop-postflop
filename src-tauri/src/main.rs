@@ -36,7 +36,7 @@ fn main() {
             range_get_weights,
             range_raw_data,
             game_init,
-            game_private_hand_cards,
+            game_private_cards,
             game_memory_usage,
             game_allocate_memory,
             game_solve_step,
@@ -148,21 +148,24 @@ struct GameInitPayload {
     board: Vec<u8>,
     starting_pot: i32,
     effective_stack: i32,
-    oop_flop_bet: Vec<f32>,
-    oop_flop_raise: Vec<f32>,
-    oop_turn_bet: Vec<f32>,
-    oop_turn_raise: Vec<f32>,
-    oop_river_bet: Vec<f32>,
-    oop_river_raise: Vec<f32>,
-    ip_flop_bet: Vec<f32>,
-    ip_flop_raise: Vec<f32>,
-    ip_turn_bet: Vec<f32>,
-    ip_turn_raise: Vec<f32>,
-    ip_river_bet: Vec<f32>,
-    ip_river_raise: Vec<f32>,
-    add_all_in_threshold: f32,
-    force_all_in_threshold: f32,
-    adjust_last_two_bet_sizes: bool,
+    donk_option: bool,
+    oop_flop_bet: String,
+    oop_flop_raise: String,
+    oop_turn_bet: String,
+    oop_turn_raise: String,
+    oop_turn_donk: String,
+    oop_river_bet: String,
+    oop_river_raise: String,
+    oop_river_donk: String,
+    ip_flop_bet: String,
+    ip_flop_raise: String,
+    ip_turn_bet: String,
+    ip_turn_raise: String,
+    ip_river_bet: String,
+    ip_river_raise: String,
+    add_allin_threshold: f32,
+    force_allin_threshold: f32,
+    merging_threshold: f32,
 }
 
 #[tauri::command(async)]
@@ -180,74 +183,88 @@ fn game_init(
         .build()
         .unwrap();
 
-    let turn = if payload.board.len() >= 4 {
-        payload.board[3]
-    } else {
-        NOT_DEALT
+    let (turn, river, state) = match payload.board.len() {
+        3 => (NOT_DEALT, NOT_DEALT, BoardState::Flop),
+        4 => (payload.board[3], NOT_DEALT, BoardState::Turn),
+        5 => (payload.board[3], payload.board[4], BoardState::River),
+        _ => return Some("Invalid board length".to_string()),
     };
 
-    let river = if payload.board.len() == 5 {
-        payload.board[4]
-    } else {
-        NOT_DEALT
-    };
-
-    let convert_bet_sizes = |sizes: &[f32]| {
-        sizes
-            .iter()
-            .map(|&x| {
-                if x >= 0.0 {
-                    BetSize::PotRelative(x)
-                } else {
-                    BetSize::LastBetRelative(-x)
-                }
-            })
-            .collect()
-    };
-
-    let bet_sizes = |bet: &[f32], raise: &[f32]| BetSizeCandidates {
-        bet: convert_bet_sizes(bet),
-        raise: convert_bet_sizes(raise),
-    };
-
-    let config = GameConfig {
+    let card_config = CardConfig {
+        range: *ranges,
         flop: payload.board[..3].try_into().unwrap(),
         turn,
         river,
-        starting_pot: payload.starting_pot,
-        effective_stack: payload.effective_stack,
-        range: *ranges,
-        flop_bet_sizes: [
-            bet_sizes(&payload.oop_flop_bet, &payload.oop_flop_raise),
-            bet_sizes(&payload.ip_flop_bet, &payload.ip_flop_raise),
-        ],
-        turn_bet_sizes: [
-            bet_sizes(&payload.oop_turn_bet, &payload.oop_turn_raise),
-            bet_sizes(&payload.ip_turn_bet, &payload.ip_turn_raise),
-        ],
-        river_bet_sizes: [
-            bet_sizes(&payload.oop_river_bet, &payload.oop_river_raise),
-            bet_sizes(&payload.ip_river_bet, &payload.ip_river_raise),
-        ],
-        turn_donk_sizes: None,
-        river_donk_sizes: None,
-        add_all_in_threshold: payload.add_all_in_threshold,
-        force_all_in_threshold: payload.force_all_in_threshold,
-        adjust_last_two_bet_sizes: payload.adjust_last_two_bet_sizes,
     };
 
-    pool_manager
-        .pool
-        .install(|| game_state.lock().unwrap().update_config(&config).err())
+    let tree_config = TreeConfig {
+        initial_state: state,
+        starting_pot: payload.starting_pot,
+        effective_stack: payload.effective_stack,
+        flop_bet_sizes: [
+            BetSizeCandidates::try_from((
+                payload.oop_flop_bet.as_str(),
+                payload.oop_flop_raise.as_str(),
+            ))
+            .unwrap(),
+            BetSizeCandidates::try_from((
+                payload.ip_flop_bet.as_str(),
+                payload.ip_flop_raise.as_str(),
+            ))
+            .unwrap(),
+        ],
+        turn_bet_sizes: [
+            BetSizeCandidates::try_from((
+                payload.oop_turn_bet.as_str(),
+                payload.oop_turn_raise.as_str(),
+            ))
+            .unwrap(),
+            BetSizeCandidates::try_from((
+                payload.ip_turn_bet.as_str(),
+                payload.ip_turn_raise.as_str(),
+            ))
+            .unwrap(),
+        ],
+        river_bet_sizes: [
+            BetSizeCandidates::try_from((
+                payload.oop_river_bet.as_str(),
+                payload.oop_river_raise.as_str(),
+            ))
+            .unwrap(),
+            BetSizeCandidates::try_from((
+                payload.ip_river_bet.as_str(),
+                payload.ip_river_raise.as_str(),
+            ))
+            .unwrap(),
+        ],
+        turn_donk_sizes: match payload.donk_option {
+            false => None,
+            true => DonkSizeCandidates::try_from(payload.oop_turn_donk.as_str()).ok(),
+        },
+        river_donk_sizes: match payload.donk_option {
+            false => None,
+            true => DonkSizeCandidates::try_from(payload.oop_river_donk.as_str()).ok(),
+        },
+        add_allin_threshold: payload.add_allin_threshold,
+        force_allin_threshold: payload.force_allin_threshold,
+        merging_threshold: payload.merging_threshold,
+    };
+
+    let action_tree = ActionTree::with_config(tree_config).unwrap();
+    game_state
+        .lock()
+        .unwrap()
+        .update_config(card_config, action_tree)
+        .err()
 }
 
 #[tauri::command]
-fn game_private_hand_cards(
+fn game_private_cards(
     player: usize,
     game_state: tauri::State<Mutex<PostFlopGame>>,
 ) -> Vec<(u8, u8)> {
     let game = game_state.lock().unwrap();
-    game.private_hand_cards(player).to_vec()
+    game.private_cards(player).to_vec()
 }
 
 #[tauri::command]

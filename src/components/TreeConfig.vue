@@ -40,22 +40,32 @@
       </div>
 
       <div class="mt-6">
-        <p class="font-bold">OOP bet sizes</p>
+        <p>
+          <span class="font-bold">OOP bet sizes</span>
+          <label class="inline-block ml-8 cursor-pointer">
+            <input
+              v-model="config.donkOption"
+              type="checkbox"
+              class="mr-1 align-middle rounded cursor-pointer"
+            />
+            Use different sizes for donk bets
+          </label>
+        </p>
         <div class="flex flex-row">
           <div>
             <p class="my-1 underline">Flop</p>
             <p class="my-1">
               <span class="inline-block w-14">Bet:</span>
               <input
-                v-model="config.oopFlopBetStr"
+                v-model="config.oopFlopBet"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.oopFlopBet === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopFlopBetSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.oopFlopBet &&
-                    (config.oopFlopBetStr = sanitize(config.oopFlopBetStr))
+                  config.oopFlopBetSanitized.valid &&
+                    (config.oopFlopBet = config.oopFlopBetSanitized.s)
                 "
               />
               %
@@ -63,35 +73,35 @@
             <p class="my-1">
               <span class="inline-block w-14">Raise:</span>
               <input
-                v-model="config.oopFlopRaiseStr"
+                v-model="config.oopFlopRaise"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.oopFlopRaise === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopFlopRaiseSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.oopFlopRaise &&
-                    (config.oopFlopRaiseStr = sanitize(config.oopFlopRaiseStr))
+                  config.oopFlopRaiseSanitized.valid &&
+                    (config.oopFlopRaise = config.oopFlopRaiseSanitized.s)
                 "
               />
               %
             </p>
           </div>
 
-          <div class="ml-6">
+          <div class="ml-5">
             <p class="my-1 underline">Turn</p>
             <p class="my-1">
               <span class="inline-block w-14">Bet:</span>
               <input
-                v-model="config.oopTurnBetStr"
+                v-model="config.oopTurnBet"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.oopTurnBet === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopTurnBetSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.oopTurnBet &&
-                    (config.oopTurnBetStr = sanitize(config.oopTurnBetStr))
+                  config.oopTurnBetSanitized.valid &&
+                    (config.oopTurnBet = config.oopTurnBetSanitized.s)
                 "
               />
               %
@@ -99,35 +109,51 @@
             <p class="my-1">
               <span class="inline-block w-14">Raise:</span>
               <input
-                v-model="config.oopTurnRaiseStr"
+                v-model="config.oopTurnRaise"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.oopTurnRaise === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopTurnRaiseSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.oopTurnRaise &&
-                    (config.oopTurnRaiseStr = sanitize(config.oopTurnRaiseStr))
+                  config.oopTurnRaiseSanitized.valid &&
+                    (config.oopTurnRaise = config.oopTurnRaiseSanitized.s)
+                "
+              />
+              %
+            </p>
+            <p v-if="config.donkOption" class="my-1">
+              <span class="inline-block w-14">Donk:</span>
+              <input
+                v-model="config.oopTurnDonk"
+                type="text"
+                :class="
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopTurnDonkSanitized.valid ? 'input-error' : '')
+                "
+                @change="
+                  config.oopTurnDonkSanitized.valid &&
+                    (config.oopTurnDonk = config.oopTurnDonkSanitized.s)
                 "
               />
               %
             </p>
           </div>
 
-          <div class="ml-6">
+          <div class="ml-5">
             <p class="my-1 underline">River</p>
             <p class="my-1">
               <span class="inline-block w-14">Bet:</span>
               <input
-                v-model="config.oopRiverBetStr"
+                v-model="config.oopRiverBet"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.oopRiverBet === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopRiverBetSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.oopRiverBet &&
-                    (config.oopRiverBetStr = sanitize(config.oopRiverBetStr))
+                  config.oopRiverBetSanitized.valid &&
+                    (config.oopRiverBet = config.oopRiverBetSanitized.s)
                 "
               />
               %
@@ -135,17 +161,31 @@
             <p class="my-1">
               <span class="inline-block w-14">Raise:</span>
               <input
-                v-model="config.oopRiverRaiseStr"
+                v-model="config.oopRiverRaise"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.oopRiverRaise === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopRiverRaiseSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.oopRiverRaise &&
-                    (config.oopRiverRaiseStr = sanitize(
-                      config.oopRiverRaiseStr
-                    ))
+                  config.oopRiverRaiseSanitized.valid &&
+                    (config.oopRiverRaise = config.oopRiverRaiseSanitized.s)
+                "
+              />
+              %
+            </p>
+            <p v-if="config.donkOption" class="my-1">
+              <span class="inline-block w-14">Donk:</span>
+              <input
+                v-model="config.oopRiverDonk"
+                type="text"
+                :class="
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.oopRiverDonkSanitized.valid ? 'input-error' : '')
+                "
+                @change="
+                  config.oopRiverDonkSanitized.valid &&
+                    (config.oopRiverDonk = config.oopRiverDonkSanitized.s)
                 "
               />
               %
@@ -181,15 +221,15 @@
             <p class="my-1">
               <span class="inline-block w-14">Bet:</span>
               <input
-                v-model="config.ipFlopBetStr"
+                v-model="config.ipFlopBet"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.ipFlopBet === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.ipFlopBetSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.ipFlopBet &&
-                    (config.ipFlopBetStr = sanitize(config.ipFlopBetStr))
+                  config.ipFlopBetSanitized.valid &&
+                    (config.ipFlopBet = config.ipFlopBetSanitized.s)
                 "
               />
               %
@@ -197,35 +237,35 @@
             <p class="my-1">
               <span class="inline-block w-14">Raise:</span>
               <input
-                v-model="config.ipFlopRaiseStr"
+                v-model="config.ipFlopRaise"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.ipFlopRaise === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.ipFlopRaiseSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.ipFlopRaise &&
-                    (config.ipFlopRaiseStr = sanitize(config.ipFlopRaiseStr))
+                  config.ipFlopRaiseSanitized.valid &&
+                    (config.ipFlopRaise = config.ipFlopRaiseSanitized.s)
                 "
               />
               %
             </p>
           </div>
 
-          <div class="ml-6">
+          <div class="ml-5">
             <p class="my-1 underline">Turn</p>
             <p class="my-1">
               <span class="inline-block w-14">Bet:</span>
               <input
-                v-model="config.ipTurnBetStr"
+                v-model="config.ipTurnBet"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.ipTurnBet === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.ipTurnBetSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.ipTurnBet &&
-                    (config.ipTurnBetStr = sanitize(config.ipTurnBetStr))
+                  config.ipTurnBetSanitized.valid &&
+                    (config.ipTurnBet = config.ipTurnBetSanitized.s)
                 "
               />
               %
@@ -233,35 +273,35 @@
             <p class="my-1">
               <span class="inline-block w-14">Raise:</span>
               <input
-                v-model="config.ipTurnRaiseStr"
+                v-model="config.ipTurnRaise"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.ipTurnRaise === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.ipTurnRaiseSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.ipTurnRaise &&
-                    (config.ipTurnRaiseStr = sanitize(config.ipTurnRaiseStr))
+                  config.ipTurnRaiseSanitized.valid &&
+                    (config.ipTurnRaise = config.ipTurnRaiseSanitized.s)
                 "
               />
               %
             </p>
           </div>
 
-          <div class="ml-6">
+          <div class="ml-5">
             <p class="my-1 underline">River</p>
             <p class="my-1">
               <span class="inline-block w-14">Bet:</span>
               <input
-                v-model="config.ipRiverBetStr"
+                v-model="config.ipRiverBet"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.ipRiverBet === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.ipRiverBetSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.ipRiverBet &&
-                    (config.ipRiverBetStr = sanitize(config.ipRiverBetStr))
+                  config.ipRiverBetSanitized.valid &&
+                    (config.ipRiverBet = config.ipRiverBetSanitized.s)
                 "
               />
               %
@@ -269,15 +309,15 @@
             <p class="my-1">
               <span class="inline-block w-14">Raise:</span>
               <input
-                v-model="config.ipRiverRaiseStr"
+                v-model="config.ipRiverRaise"
                 type="text"
                 :class="
-                  'w-[5.25rem] px-2 py-1 rounded-lg text-sm ' +
-                  (config.ipRiverRaise === null ? 'input-error' : '')
+                  'w-[5.5rem] px-2 py-1 rounded-lg text-sm ' +
+                  (!config.ipRiverRaiseSanitized.valid ? 'input-error' : '')
                 "
                 @change="
-                  config.ipRiverRaise &&
-                    (config.ipRiverRaiseStr = sanitize(config.ipRiverRaiseStr))
+                  config.ipRiverRaiseSanitized.valid &&
+                    (config.ipRiverRaise = config.ipRiverRaiseSanitized.s)
                 "
               />
               %
@@ -288,49 +328,48 @@
 
       <div class="mt-6">
         <p class="my-1">
-          Add all-in if effective stack is less than:
+          <span class="inline-block w-40">Add all-in threshold:</span>
           <input
             v-model="config.addAllInThreshold"
             type="number"
             :class="
-              'w-[5.25rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.addAllInThreshold < 0 || config.addAllInThreshold > 100000
-                ? 'input-error'
-                : '')
+              'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+              (config.addAllInThreshold < 0 ? 'input-error' : '')
             "
             min="0"
-            max="100000"
+            max="10000000"
           />
-          % of pot
+          %
         </p>
 
         <p class="my-1">
-          Force all-in if next opponent's raise size is less than:
+          <span class="inline-block w-40">Force all-in threshold:</span>
           <input
             v-model="config.forceAllInThreshold"
             type="number"
             :class="
-              'w-[5.25rem] ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-              (config.forceAllInThreshold < 0 ||
-              config.forceAllInThreshold > 100000
-                ? 'input-error'
-                : '')
+              'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+              (config.forceAllInThreshold < 0 ? 'input-error' : '')
             "
             min="0"
-            max="100000"
+            max="10000000"
           />
-          % of pot
+          %
         </p>
 
         <p class="my-1">
-          <label class="cursor-pointer">
-            <input
-              v-model="config.adjustLastTwoBetSizes"
-              type="checkbox"
-              class="mr-1 align-middle rounded cursor-pointer"
-            />
-            Adjust last two bet sizes
-          </label>
+          <span class="inline-block w-40">Merging threshold:</span>
+          <input
+            v-model="config.mergingThreshold"
+            type="number"
+            :class="
+              'w-24 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
+              (config.mergingThreshold < 0 ? 'input-error' : '')
+            "
+            min="0"
+            max="10000000"
+          />
+          %
         </p>
       </div>
     </div>
@@ -351,27 +390,29 @@ import { useConfigStore } from "../store";
 
 import DbItemPicker from "./DbItemPicker.vue";
 
-const whitespacesBeforeCommaPat = /\s+,/;
-const whitespacesPat = /\s+/;
-
 type ConfigValue = {
   startingPot: number;
   effectiveStack: number;
-  oopFlopBetStr: string;
-  oopFlopRaiseStr: string;
-  oopTurnBetStr: string;
-  oopTurnRaiseStr: string;
-  oopRiverBetStr: string;
-  oopRiverRaiseStr: string;
-  ipFlopBetStr: string;
-  ipFlopRaiseStr: string;
-  ipTurnBetStr: string;
-  ipTurnRaiseStr: string;
-  ipRiverBetStr: string;
-  ipRiverRaiseStr: string;
+  donkOption: number;
+  oopFlopBet: string;
+  oopFlopRaise: string;
+  oopTurnBet: string;
+  oopTurnRaise: string;
+  oopTurnDonk: string;
+  oopRiverBet: string;
+  oopRiverRaise: string;
+  oopRiverDonk: string;
+  ipFlopBet: string;
+  ipFlopRaise: string;
+  ipTurnBet: string;
+  ipTurnRaise: string;
+  ipRiverBet: string;
+  ipRiverRaise: string;
   addAllInThreshold: number;
   forceAllInThreshold: number;
-  adjustLastTwoBetSizes: number;
+  mergingThreshold: number;
+  addedLines: string;
+  removedLines: string;
 };
 
 export default defineComponent({
@@ -382,74 +423,73 @@ export default defineComponent({
   setup() {
     const config = useConfigStore();
 
-    const sanitize = (str: string) => {
-      return str
-        .trim()
-        .replace(whitespacesBeforeCommaPat, ",")
-        .replace(whitespacesPat, " ");
-    };
-
     const isOopError = computed(() => {
       return (
-        config.oopFlopBet === null ||
-        config.oopFlopRaise === null ||
-        config.oopTurnBet === null ||
-        config.oopTurnRaise === null ||
-        config.oopRiverBet === null ||
-        config.oopRiverRaise === null
+        !config.oopFlopBetSanitized.valid ||
+        !config.oopFlopRaiseSanitized.valid ||
+        !config.oopTurnBetSanitized.valid ||
+        !config.oopTurnRaiseSanitized.valid ||
+        !config.oopRiverBetSanitized.valid ||
+        !config.oopRiverRaiseSanitized.valid ||
+        (config.donkOption && !config.oopTurnDonkSanitized.valid) ||
+        (config.donkOption && !config.oopRiverDonkSanitized.valid)
       );
     });
 
     const isIpError = computed(() => {
       return (
-        config.ipFlopBet === null ||
-        config.ipFlopRaise === null ||
-        config.ipTurnBet === null ||
-        config.ipTurnRaise === null ||
-        config.ipRiverBet === null ||
-        config.ipRiverRaise === null
+        !config.ipFlopBetSanitized.valid ||
+        !config.ipFlopRaiseSanitized.valid ||
+        !config.ipTurnBetSanitized.valid ||
+        !config.ipTurnRaiseSanitized.valid ||
+        !config.ipRiverBetSanitized.valid ||
+        !config.ipRiverRaiseSanitized.valid
       );
     });
 
     const oopToIp = () => {
-      config.ipFlopBetStr = config.oopFlopBetStr;
-      config.ipFlopRaiseStr = config.oopFlopRaiseStr;
-      config.ipTurnBetStr = config.oopTurnBetStr;
-      config.ipTurnRaiseStr = config.oopTurnRaiseStr;
-      config.ipRiverBetStr = config.oopRiverBetStr;
-      config.ipRiverRaiseStr = config.oopRiverRaiseStr;
+      config.ipFlopBet = config.oopFlopBet;
+      config.ipFlopRaise = config.oopFlopRaise;
+      config.ipTurnBet = config.oopTurnBet;
+      config.ipTurnRaise = config.oopTurnRaise;
+      config.ipRiverBet = config.oopRiverBet;
+      config.ipRiverRaise = config.oopRiverRaise;
     };
 
     const ipToOop = () => {
-      config.oopFlopBetStr = config.ipFlopBetStr;
-      config.oopFlopRaiseStr = config.ipFlopRaiseStr;
-      config.oopTurnBetStr = config.ipTurnBetStr;
-      config.oopTurnRaiseStr = config.ipTurnRaiseStr;
-      config.oopRiverBetStr = config.ipRiverBetStr;
-      config.oopRiverRaiseStr = config.ipRiverRaiseStr;
+      config.oopFlopBet = config.ipFlopBet;
+      config.oopFlopRaise = config.ipFlopRaise;
+      config.oopTurnBet = config.ipTurnBet;
+      config.oopTurnRaise = config.ipTurnRaise;
+      config.oopRiverBet = config.ipRiverBet;
+      config.oopRiverRaise = config.ipRiverRaise;
     };
 
     const dbValue = computed(
-      () =>
-        ({
-          startingPot: config.startingPot,
-          effectiveStack: config.effectiveStack,
-          oopFlopBetStr: config.oopFlopBetStr,
-          oopFlopRaiseStr: config.oopFlopRaiseStr,
-          oopTurnBetStr: config.oopTurnBetStr,
-          oopTurnRaiseStr: config.oopTurnRaiseStr,
-          oopRiverBetStr: config.oopRiverBetStr,
-          oopRiverRaiseStr: config.oopRiverRaiseStr,
-          ipFlopBetStr: config.ipFlopBetStr,
-          ipFlopRaiseStr: config.ipFlopRaiseStr,
-          ipTurnBetStr: config.ipTurnBetStr,
-          ipTurnRaiseStr: config.ipTurnRaiseStr,
-          ipRiverBetStr: config.ipRiverBetStr,
-          ipRiverRaiseStr: config.ipRiverRaiseStr,
-          addAllInThreshold: config.addAllInThreshold,
-          forceAllInThreshold: config.forceAllInThreshold,
-          adjustLastTwoBetSizes: Number(config.adjustLastTwoBetSizes),
-        } as ConfigValue)
+      (): ConfigValue => ({
+        startingPot: config.startingPot,
+        effectiveStack: config.effectiveStack,
+        donkOption: Number(config.donkOption),
+        oopFlopBet: config.oopFlopBet,
+        oopFlopRaise: config.oopFlopRaise,
+        oopTurnBet: config.oopTurnBet,
+        oopTurnRaise: config.oopTurnRaise,
+        oopTurnDonk: config.donkOption ? config.oopTurnDonk : "",
+        oopRiverBet: config.oopRiverBet,
+        oopRiverRaise: config.oopRiverRaise,
+        oopRiverDonk: config.donkOption ? config.oopRiverDonk : "",
+        ipFlopBet: config.ipFlopBet,
+        ipFlopRaise: config.ipFlopRaise,
+        ipTurnBet: config.ipTurnBet,
+        ipTurnRaise: config.ipTurnRaise,
+        ipRiverBet: config.ipRiverBet,
+        ipRiverRaise: config.ipRiverRaise,
+        addAllInThreshold: config.addAllInThreshold,
+        forceAllInThreshold: config.forceAllInThreshold,
+        mergingThreshold: config.mergingThreshold,
+        addedLines: "",
+        removedLines: "",
+      })
     );
 
     const allowSave = computed(
@@ -463,34 +503,35 @@ export default defineComponent({
         !isOopError.value &&
         !isIpError.value &&
         config.addAllInThreshold >= 0 &&
-        config.addAllInThreshold <= 100000 &&
         config.forceAllInThreshold >= 0 &&
-        config.forceAllInThreshold <= 100000
+        config.mergingThreshold >= 0
     );
 
     const loadConfig = (value: ConfigValue) => {
       config.startingPot = value.startingPot;
       config.effectiveStack = value.effectiveStack;
-      config.oopFlopBetStr = value.oopFlopBetStr;
-      config.oopFlopRaiseStr = value.oopFlopRaiseStr;
-      config.oopTurnBetStr = value.oopTurnBetStr;
-      config.oopTurnRaiseStr = value.oopTurnRaiseStr;
-      config.oopRiverBetStr = value.oopRiverBetStr;
-      config.oopRiverRaiseStr = value.oopRiverRaiseStr;
-      config.ipFlopBetStr = value.ipFlopBetStr;
-      config.ipFlopRaiseStr = value.ipFlopRaiseStr;
-      config.ipTurnBetStr = value.ipTurnBetStr;
-      config.ipTurnRaiseStr = value.ipTurnRaiseStr;
-      config.ipRiverBetStr = value.ipRiverBetStr;
-      config.ipRiverRaiseStr = value.ipRiverRaiseStr;
+      config.donkOption = Boolean(value.donkOption);
+      config.oopFlopBet = value.oopFlopBet;
+      config.oopFlopRaise = value.oopFlopRaise;
+      config.oopTurnBet = value.oopTurnBet;
+      config.oopTurnRaise = value.oopTurnRaise;
+      config.oopTurnDonk = value.oopTurnDonk;
+      config.oopRiverBet = value.oopRiverBet;
+      config.oopRiverRaise = value.oopRiverRaise;
+      config.oopRiverDonk = value.oopRiverDonk;
+      config.ipFlopBet = value.ipFlopBet;
+      config.ipFlopRaise = value.ipFlopRaise;
+      config.ipTurnBet = value.ipTurnBet;
+      config.ipTurnRaise = value.ipTurnRaise;
+      config.ipRiverBet = value.ipRiverBet;
+      config.ipRiverRaise = value.ipRiverRaise;
       config.addAllInThreshold = value.addAllInThreshold;
       config.forceAllInThreshold = value.forceAllInThreshold;
-      config.adjustLastTwoBetSizes = Boolean(value.adjustLastTwoBetSizes);
+      config.mergingThreshold = value.mergingThreshold;
     };
 
     return {
       config,
-      sanitize,
       isOopError,
       isIpError,
       oopToIp,

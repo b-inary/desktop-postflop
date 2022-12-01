@@ -212,7 +212,9 @@ import {
 } from "../store";
 import { invoke } from "@tauri-apps/api";
 
-function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
+const checkConfig = (
+  config: ReturnType<typeof useConfigStore>
+): string | null => {
   if (config.board.length < 3) {
     return "Board must consist of at least three cards";
   }
@@ -241,72 +243,58 @@ function checkConfig(config: ReturnType<typeof useConfigStore>): string | null {
     return "Effective stack is be an integer";
   }
 
-  if (config.oopFlopBet === null) {
-    return "Invalid tree configuration (OOP flop bet)";
+  const betConfig = [
+    { s: config.oopFlopBetSanitized, kind: "OOP flop bet" },
+    { s: config.oopFlopRaiseSanitized, kind: "OOP flop raise" },
+    { s: config.oopTurnBetSanitized, kind: "OOP turn bet" },
+    { s: config.oopTurnRaiseSanitized, kind: "OOP turn raise" },
+    { s: config.oopRiverBetSanitized, kind: "OOP river bet" },
+    { s: config.oopRiverRaiseSanitized, kind: "OOP river raise" },
+    { s: config.ipFlopBetSanitized, kind: "IP flop bet" },
+    { s: config.ipFlopRaiseSanitized, kind: "IP flop raise" },
+    { s: config.ipTurnBetSanitized, kind: "IP turn bet" },
+    { s: config.ipTurnRaiseSanitized, kind: "IP turn raise" },
+    { s: config.ipRiverBetSanitized, kind: "IP river bet" },
+    { s: config.ipRiverRaiseSanitized, kind: "IP river raise" },
+  ];
+
+  for (const { s, kind } of betConfig) {
+    if (!s.valid) {
+      return `${kind}: ${s.s}`;
+    }
   }
 
-  if (config.oopFlopRaise === null) {
-    return "Invalid tree configuration (OOP flop raise)";
-  }
-
-  if (config.oopTurnBet === null) {
-    return "Invalid tree configuration (OOP turn bet)";
-  }
-
-  if (config.oopTurnRaise === null) {
-    return "Invalid tree configuration (OOP turn raise)";
-  }
-
-  if (config.oopRiverBet === null) {
-    return "Invalid tree configuration (OOP river bet)";
-  }
-
-  if (config.oopRiverRaise === null) {
-    return "Invalid tree configuration (OOP river raise)";
-  }
-
-  if (config.ipFlopBet === null) {
-    return "Invalid tree configuration (IP flop bet)";
-  }
-
-  if (config.ipFlopRaise === null) {
-    return "Invalid tree configuration (IP flop raise)";
-  }
-
-  if (config.ipTurnBet === null) {
-    return "Invalid tree configuration (IP turn bet)";
-  }
-
-  if (config.ipTurnRaise === null) {
-    return "Invalid tree configuration (IP turn raise)";
-  }
-
-  if (config.ipRiverBet === null) {
-    return "Invalid tree configuration (IP river bet)";
-  }
-
-  if (config.ipRiverRaise === null) {
-    return "Invalid tree configuration (IP river raise)";
+  if (config.donkOption) {
+    if (!config.oopTurnDonkSanitized.valid) {
+      return `OOP turn donk: ${config.oopTurnDonkSanitized.s}`;
+    }
+    if (!config.oopRiverDonkSanitized.valid) {
+      return `OOP river donk: ${config.oopRiverDonkSanitized.s}`;
+    }
   }
 
   if (config.addAllInThreshold < 0) {
     return "Invalid add all-in threshold";
   }
 
-  if (config.addAllInThreshold > 100000) {
-    return "Add all-in threshold is too large";
-  }
-
   if (config.forceAllInThreshold < 0) {
     return "Invalid force all-in threshold";
   }
 
-  if (config.forceAllInThreshold > 100000) {
-    return "Force all-in threshold is too large";
+  if (config.mergingThreshold < 0) {
+    return "Invalid merging threshold";
   }
 
   return null;
-}
+};
+
+const convertBetString = (s: string): string => {
+  if (s === "") return s;
+  return s
+    .split(", ")
+    .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
+    .join(",");
+};
 
 export default defineComponent({
   setup() {
@@ -380,24 +368,6 @@ export default defineComponent({
         return;
       }
 
-      // needed for type inference
-      if (
-        config.oopFlopBet === null ||
-        config.oopFlopRaise === null ||
-        config.oopTurnBet === null ||
-        config.oopTurnRaise === null ||
-        config.oopRiverBet === null ||
-        config.oopRiverRaise === null ||
-        config.ipFlopBet === null ||
-        config.ipFlopRaise === null ||
-        config.ipTurnBet === null ||
-        config.ipTurnRaise === null ||
-        config.ipRiverBet === null ||
-        config.ipRiverRaise === null
-      ) {
-        return;
-      }
-
       saveConfigTmp();
       isTreeBuilding.value = true;
       treeStatus.value = "Building tree...";
@@ -408,21 +378,24 @@ export default defineComponent({
           board: tmpConfig.board,
           starting_pot: tmpConfig.startingPot,
           effective_stack: tmpConfig.effectiveStack,
-          oop_flop_bet: tmpConfig.oopFlopBet,
-          oop_flop_raise: tmpConfig.oopFlopRaise,
-          oop_turn_bet: tmpConfig.oopTurnBet,
-          oop_turn_raise: tmpConfig.oopTurnRaise,
-          oop_river_bet: tmpConfig.oopRiverBet,
-          oop_river_raise: tmpConfig.oopRiverRaise,
-          ip_flop_bet: tmpConfig.ipFlopBet,
-          ip_flop_raise: tmpConfig.ipFlopRaise,
-          ip_turn_bet: tmpConfig.ipTurnBet,
-          ip_turn_raise: tmpConfig.ipTurnRaise,
-          ip_river_bet: tmpConfig.ipRiverBet,
-          ip_river_raise: tmpConfig.ipRiverRaise,
-          add_all_in_threshold: tmpConfig.addAllInThreshold / 100,
-          force_all_in_threshold: tmpConfig.forceAllInThreshold / 100,
-          adjust_last_two_bet_sizes: tmpConfig.adjustLastTwoBetSizes,
+          donk_option: tmpConfig.donkOption,
+          oop_flop_bet: convertBetString(tmpConfig.oopFlopBet),
+          oop_flop_raise: convertBetString(tmpConfig.oopFlopRaise),
+          oop_turn_bet: convertBetString(tmpConfig.oopTurnBet),
+          oop_turn_raise: convertBetString(tmpConfig.oopTurnRaise),
+          oop_turn_donk: convertBetString(tmpConfig.oopTurnDonk),
+          oop_river_bet: convertBetString(tmpConfig.oopRiverBet),
+          oop_river_raise: convertBetString(tmpConfig.oopRiverRaise),
+          oop_river_donk: convertBetString(tmpConfig.oopRiverDonk),
+          ip_flop_bet: convertBetString(tmpConfig.ipFlopBet),
+          ip_flop_raise: convertBetString(tmpConfig.ipFlopRaise),
+          ip_turn_bet: convertBetString(tmpConfig.ipTurnBet),
+          ip_turn_raise: convertBetString(tmpConfig.ipTurnRaise),
+          ip_river_bet: convertBetString(tmpConfig.ipRiverBet),
+          ip_river_raise: convertBetString(tmpConfig.ipRiverRaise),
+          add_allin_threshold: tmpConfig.addAllInThreshold / 100,
+          force_allin_threshold: tmpConfig.forceAllInThreshold / 100,
+          merging_threshold: tmpConfig.mergingThreshold / 100,
         },
       });
 

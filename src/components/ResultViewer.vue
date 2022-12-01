@@ -582,7 +582,7 @@ export default defineComponent({
     const updateResult = async (depth: number, isFirstCall: boolean) => {
       if (isFirstCall) {
         for (let player = 0; player < 2; ++player) {
-          const cards: number[][] = await invoke("game_private_hand_cards", {
+          const cards: number[][] = await invoke("game_private_cards", {
             player,
           });
           handCards.value[player] = cards.map(
