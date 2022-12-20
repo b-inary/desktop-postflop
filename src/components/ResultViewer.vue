@@ -207,7 +207,7 @@ const displayOptions = ref<DisplayOptions>({
   suit: "grouped",
   strategy: "show",
   contentBasics: "default",
-  contentChance: "strategy",
+  // contentChance: "strategy",
 });
 
 const copySuccess = ref(0);

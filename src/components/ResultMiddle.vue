@@ -1,7 +1,7 @@
 <template>
   <div class="flex shrink-0 h-12 border-y border-gray-500">
     <button
-      v-for="mode in ['basics', 'compare', 'graphs', 'scatter'] as const"
+      v-for="mode in ['basics', 'compare'] as const"
       :key="mode"
       :class="
         'flex w-[9%] h-full items-center justify-center font-semibold text-lg transition ' +
@@ -29,7 +29,7 @@
     </button>
 
     <div
-      class="flex ml-auto shrink-0 h-full pl-4 items-center justify-start gap-2 snug"
+      class="flex ml-auto shrink-0 h-full px-4 items-center justify-start gap-2 snug"
     >
       <div
         v-if="displayMode === 'basics'"
@@ -119,6 +119,7 @@
         </select>
       </div>
 
+      <!--
       <div
         v-if="displayMode === 'chance'"
         class="flex flex-col items-start justify-center h-full"
@@ -170,6 +171,7 @@
           </button>
         </Tippy>
       </div>
+      -->
     </div>
   </div>
 </template>
@@ -179,12 +181,12 @@ import { reactive, ref, toRefs, watch } from "vue";
 import { capitalize } from "../utils";
 import * as Types from "../result-types";
 
-import { Tippy } from "vue-tippy";
-import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
-import {
-  ClipboardDocumentIcon,
-  ClipboardDocumentCheckIcon,
-} from "@heroicons/vue/24/outline";
+// import { Tippy } from "vue-tippy";
+// import { ComputerDesktopIcon } from "@heroicons/vue/24/solid";
+// import {
+//   ClipboardDocumentIcon,
+//   ClipboardDocumentCheckIcon,
+// } from "@heroicons/vue/24/outline";
 
 const props = defineProps<{
   displayMode: Types.DisplayMode;
@@ -197,8 +199,8 @@ const props = defineProps<{
 const emit = defineEmits<{
   (event: "update:display-mode", displayMode: Types.DisplayMode): void;
   (event: "update:display-options", displayOptions: Types.DisplayOptions): void;
-  (event: "copy-to-clipboard"): void;
-  (event: "reset-copy-success"): void;
+  // (event: "copy-to-clipboard"): void;
+  // (event: "reset-copy-success"): void;
 }>();
 
 const { chanceMode } = toRefs(props);
@@ -220,7 +222,7 @@ const displayOptions = reactive<Types.DisplayOptions>({
   suit: "grouped",
   strategy: "show",
   contentBasics: "default",
-  contentChance: "strategy",
+  // contentChance: "strategy",
 });
 
 const strategyContentPair = ref("show,default");
@@ -240,9 +242,9 @@ if (savedDisplayOptions) {
   if (Types.contentBasicsList.includes(saved?.contentBasics)) {
     displayOptions.contentBasics = saved.contentBasics;
   }
-  if (Types.contentChanceList.includes(saved?.contentChance)) {
-    displayOptions.contentChance = saved.contentChance;
-  }
+  // if (Types.contentChanceList.includes(saved?.contentChance)) {
+  //   displayOptions.contentChance = saved.contentChance;
+  // }
   strategyContentPair.value = [
     displayOptions.strategy,
     displayOptions.contentBasics,
@@ -266,11 +268,11 @@ const updateDisplayOptions = () => {
   emit("update:display-options", options);
 };
 
-const copyToClipboard = () => {
-  emit("copy-to-clipboard");
-};
+// const copyToClipboard = () => {
+//   emit("copy-to-clipboard");
+// };
 
-const onCopyTooltipLeave = () => {
-  emit("reset-copy-success");
-};
+// const onCopyTooltipLeave = () => {
+//   emit("reset-copy-success");
+// };
 </script>
