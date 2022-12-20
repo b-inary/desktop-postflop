@@ -1,163 +1,27 @@
 import { defineStore } from "pinia";
+import { sanitizeBetString } from "./utils";
 
-export type MainView =
-  | "OOPRange"
-  | "IPRange"
-  | "Board"
-  | "TreeConfig"
-  | "RunSolver"
-  | "Result"
-  | "About";
+export type NavView = "solver" | "results";
 
-const ranks = [
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-  "A",
-];
-
-const suits = ["♣", "♦", "♥", "♠"];
-
-const suitClasses = [
-  "text-green-600",
-  "text-blue-600",
-  "text-pink-600",
-  "text-black",
-];
-
-export const cardText = (card: number) => {
-  return {
-    rank: ranks[Math.floor(card / 4)],
-    suit: suits[card % 4],
-    colorClass: suitClasses[card % 4],
-  };
-};
-
-const forbiddenChars = /[beox+-]/;
-
-const parseFloat = (s: string): number => {
-  if (forbiddenChars.test(s)) {
-    return Number.NaN;
-  } else {
-    return Number(s);
-  }
-};
-
-export const sanitizeBetString = (
-  s: string,
-  is_raise: boolean
-): { s: string; valid: boolean } => {
-  const trimmed = s.trim();
-  if (trimmed === "") return { s: "", valid: true };
-
-  const split = trimmed.split(",");
-  const elements = split.map((s) => s.trim().toLowerCase());
-
-  if (elements[elements.length - 1] === "") {
-    elements.pop();
-  }
-
-  if (elements.length >= 32) {
-    return { s: "Too many specifications", valid: false };
-  }
-
-  let sanitized = "";
-
-  for (const e of elements) {
-    if (sanitized !== "") {
-      sanitized += ", ";
-    }
-    if (e === "") {
-      return { s: "Found empty string", valid: false };
-    } else if (e.endsWith("x")) {
-      // Previous bet relative
-      if (!is_raise) {
-        return {
-          s: `Multiplicative size is not allowed: ${e}`,
-          valid: false,
-        };
-      } else {
-        const float = parseFloat(e.slice(0, -1));
-        if (Number.isNaN(float)) {
-          return { s: `Invalid number: ${e}`, valid: false };
-        } else if (float <= 1.0) {
-          return { s: `Multiplier must be greater than 1: ${e}`, valid: false };
-        } else {
-          sanitized += `${float}x`;
-        }
-      }
-    } else if (e.endsWith("c")) {
-      // Additive
-      const float = parseFloat(e.slice(0, -1));
-      if (Number.isNaN(float)) {
-        return { s: `Invalid number: ${e}`, valid: false };
-      } else if (float % 1 !== 0) {
-        return { s: `Addition size must be an integer: ${e}`, valid: false };
-      } else if (float > 100000) {
-        return { s: `Addition size too large: ${e}`, valid: false };
-      } else {
-        sanitized += `${float}c`;
-      }
-    } else if (e.includes("e")) {
-      // Geometric
-      const split = e.split("e");
-      if (split.length !== 2) {
-        return { s: `Invalid geometric specification: ${e}`, valid: false };
-      }
-      const float1 = split[0] === "" ? null : parseFloat(split[0]);
-      const float2 = split[1] === "" ? null : parseFloat(split[1]);
-      if (float1 !== null) {
-        if (Number.isNaN(float1)) {
-          return { s: `Invalid number: ${e}`, valid: false };
-        } else if (float1 % 1 !== 0 || float1 === 0) {
-          return {
-            s: `Geometric size must be a positive integer: ${e}`,
-            valid: false,
-          };
-        } else if (float1 > 100) {
-          return { s: `Geometric size too large: ${e}`, valid: false };
-        }
-      }
-      if (float2 !== null && Number.isNaN(float2)) {
-        return { s: `Invalid number: ${e}`, valid: false };
-      }
-      sanitized += `${float1 ?? ""}e${float2 ?? ""}`;
-    } else if (e === "a") {
-      // All-in
-      sanitized += "a";
-    } else {
-      // Pot relative
-      const float = parseFloat(e);
-      if (Number.isNaN(float)) {
-        return { s: `Invalid number: ${e}`, valid: false };
-      }
-      sanitized += `${float}`;
-    }
-  }
-
-  return { s: sanitized, valid: true };
-};
+export type SideView =
+  | "oop-range"
+  | "ip-range"
+  | "board"
+  | "tree-config"
+  | "run-solver"
+  | "about";
 
 export const saveConfigTmp = () => {
   const config = useConfigStore();
   const tmpConfig = useTmpConfigStore();
 
-  tmpConfig.rangeRaw[0].set(config.rangeRaw[0]);
-  tmpConfig.rangeRaw[1].set(config.rangeRaw[1]);
-
   tmpConfig.$patch({
+    rangeRaw: [[...config.rangeRaw[0]], [...config.rangeRaw[1]]],
     board: [...config.board],
     startingPot: config.startingPot,
     effectiveStack: config.effectiveStack,
+    rakePercent: config.rakePercent,
+    rakeCap: config.rakeCap,
     donkOption: config.donkOption,
     oopFlopBet: config.oopFlopBet,
     oopFlopRaise: config.oopFlopRaise,
@@ -176,6 +40,9 @@ export const saveConfigTmp = () => {
     addAllInThreshold: config.addAllInThreshold,
     forceAllInThreshold: config.forceAllInThreshold,
     mergingThreshold: config.mergingThreshold,
+    expectedBoardLength: config.expectedBoardLength,
+    addedLines: config.addedLines,
+    removedLines: config.removedLines,
   });
 };
 
@@ -183,13 +50,13 @@ export const saveConfig = () => {
   const tmpConfig = useTmpConfigStore();
   const savedConfig = useSavedConfigStore();
 
-  savedConfig.rangeRaw[0].set(tmpConfig.rangeRaw[0]);
-  savedConfig.rangeRaw[1].set(tmpConfig.rangeRaw[1]);
-
   savedConfig.$patch({
+    rangeRaw: [[...tmpConfig.rangeRaw[0]], [...tmpConfig.rangeRaw[1]]],
     board: tmpConfig.board,
     startingPot: tmpConfig.startingPot,
     effectiveStack: tmpConfig.effectiveStack,
+    rakePercent: tmpConfig.rakePercent,
+    rakeCap: tmpConfig.rakeCap,
     donkOption: tmpConfig.donkOption,
     oopFlopBet: tmpConfig.oopFlopBet,
     oopFlopRaise: tmpConfig.oopFlopRaise,
@@ -208,12 +75,16 @@ export const saveConfig = () => {
     addAllInThreshold: tmpConfig.addAllInThreshold,
     forceAllInThreshold: tmpConfig.forceAllInThreshold,
     mergingThreshold: tmpConfig.mergingThreshold,
+    expectedBoardLength: tmpConfig.expectedBoardLength,
+    addedLines: tmpConfig.addedLines,
+    removedLines: tmpConfig.removedLines,
   });
 };
 
 export const useStore = defineStore("app", {
   state: () => ({
-    mainView: "OOPRange" as MainView,
+    navView: "solver" as NavView,
+    sideView: "oop-range" as SideView,
     isSolverRunning: false,
     isSolverPaused: false,
     isSolverFinished: false,
@@ -239,12 +110,14 @@ export const useConfigStore = defineStore("config", {
       Array.from({ length: 13 * 13 }, () => 0),
     ],
     rangeRaw: [
-      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
-      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Array.from({ length: (52 * 51) / 2 }, () => 0),
     ],
     board: [] as number[],
-    startingPot: 0,
-    effectiveStack: 0,
+    startingPot: 20,
+    effectiveStack: 100,
+    rakePercent: 0,
+    rakeCap: 0,
     donkOption: false,
     oopFlopBet: "",
     oopFlopRaise: "",
@@ -260,9 +133,12 @@ export const useConfigStore = defineStore("config", {
     ipTurnRaise: "",
     ipRiverBet: "",
     ipRiverRaise: "",
-    addAllInThreshold: 0,
-    forceAllInThreshold: 0,
-    mergingThreshold: 0,
+    addAllInThreshold: 150,
+    forceAllInThreshold: 20,
+    mergingThreshold: 10,
+    expectedBoardLength: 0,
+    addedLines: "",
+    removedLines: "",
   }),
 
   getters: {
@@ -286,12 +162,14 @@ export const useConfigStore = defineStore("config", {
 export const useTmpConfigStore = defineStore("tmpConfig", {
   state: () => ({
     rangeRaw: [
-      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
-      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Array.from({ length: (52 * 51) / 2 }, () => 0),
     ],
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
+    rakePercent: 0,
+    rakeCap: 0,
     donkOption: false,
     oopFlopBet: "",
     oopFlopRaise: "",
@@ -310,18 +188,23 @@ export const useTmpConfigStore = defineStore("tmpConfig", {
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
+    addedLines: "",
+    removedLines: "",
   }),
 });
 
 export const useSavedConfigStore = defineStore("savedConfig", {
   state: () => ({
     rangeRaw: [
-      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
-      Float32Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Array.from({ length: (52 * 51) / 2 }, () => 0),
+      Array.from({ length: (52 * 51) / 2 }, () => 0),
     ],
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
+    rakePercent: 0,
+    rakeCap: 0,
     donkOption: false,
     oopFlopBet: "",
     oopFlopRaise: "",
@@ -340,5 +223,8 @@ export const useSavedConfigStore = defineStore("savedConfig", {
     addAllInThreshold: 0,
     forceAllInThreshold: 0,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
+    addedLines: "",
+    removedLines: "",
   }),
 });

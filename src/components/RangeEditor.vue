@@ -1,36 +1,45 @@
 <template>
-  <div class="flex mt-2">
+  <div class="flex mt-1">
     <div class="shrink-0 ml-1">
-      <table class="bg-gray-200 shadow" @mouseleave="dragEnd">
+      <table class="shadow-md select-none snug" @mouseleave="dragEnd">
         <tr v-for="row in 13" :key="row" class="h-9">
           <td
             v-for="col in 13"
             :key="col"
-            :class="
-              'relative w-10 border-black select-none ' +
-              (row === col ? 'border-2' : 'border')
-            "
+            class="relative w-[2.625rem] border border-black"
             @mousedown="dragStart(row, col)"
             @mouseup="dragEnd"
             @mouseenter="mouseEnter(row, col)"
           >
             <div
-              class="absolute bottom-0 left-0 w-full bg-yellow-300"
-              :style="{ height: weightPercent(row, col) }"
-            ></div>
+              :class="
+                'absolute w-full h-full left-0 top-0 ' +
+                (row === col ? 'bg-neutral-700' : 'bg-neutral-800')
+              "
+            >
+              <div
+                class="absolute w-full h-full left-0 top-0 bg-bottom bg-no-repeat"
+                :style="{
+                  'background-image': `linear-gradient(${amber500} 0% 100%)`,
+                  'background-size': `100% ${cellValue(row, col)}%`,
+                }"
+              ></div>
+            </div>
             <div
               :class="
-                'absolute -top-px left-px z-10 text-sm ' +
-                (!hasWeight(row, col) ? 'text-gray-500' : '')
+                'absolute -top-px left-[0.1875rem] z-10 text-shadow ' +
+                (cellValue(row, col) > 0 ? 'text-white' : 'text-neutral-500')
               "
             >
               {{ cellText(row, col) }}
             </div>
-            <div class="absolute -bottom-px right-px z-10 text-sm">
+            <div
+              class="absolute bottom-px right-1 z-10 text-sm text-shadow text-white"
+            >
               {{
-                !hasWeight(row, col) || isWeightFull(row, col)
-                  ? ""
-                  : weightPercent(row, col)
+                cellValue(row, col) > 0 && cellValue(row, col) < 100
+                  ? cellValue(row, col).toFixed(1)
+                  : ""
               }}
             </div>
           </td>
@@ -52,13 +61,7 @@
             @change="onRangeTextChange"
           />
 
-          <button
-            :class="
-              'rounded-lg shadow-sm ml-6 px-3.5 py-1.5 text-white text-sm font-medium ' +
-              'bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-blue-300'
-            "
-            @click="clearRange"
-          >
+          <button class="ml-6 button-base button-blue" @click="clearRange">
             Clear
           </button>
         </div>
@@ -69,8 +72,8 @@
       </div>
     </div>
 
-    <db-item-picker
-      class="shrink ml-6"
+    <DbItemPicker
+      class="ml-6"
       store-name="ranges"
       :index="player"
       :value="rangeText"
@@ -114,14 +117,15 @@
   </div>
 </template>
 
-<script lang="ts">
-import { defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { ref } from "vue";
 import { useConfigStore } from "../store";
-import { invoke } from "@tauri-apps/api";
+import { ranks } from "../utils";
+import * as invokes from "../invokes";
 
 import DbItemPicker from "./DbItemPicker.vue";
 
-const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K", "A"];
+const amber500 = "#f59e0b";
 
 const rankPat = "[AaKkQqJjTt2-9]";
 const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
@@ -133,162 +137,114 @@ const rangeRegex = new RegExp(
 
 type DraggingMode = "none" | "enabling" | "disabling";
 
-export default defineComponent({
-  components: {
-    DbItemPicker,
-  },
+const props = defineProps<{ player: number }>();
+const config = useConfigStore();
 
-  props: {
-    player: {
-      type: Number,
-      required: true,
-    },
-  },
+const rangeText = ref("");
+const rangeTextError = ref("");
+const weight = ref(100);
+const numCombos = ref(0);
 
-  setup(props) {
-    const config = useConfigStore();
+let draggingMode: DraggingMode = "none";
 
-    const rangeStore = config.range[props.player];
-    const rangeStoreRaw = config.rangeRaw[props.player];
-    const rangeText = ref("");
-    const rangeTextError = ref("");
-    const weight = ref(100);
-    const numCombos = ref(0);
+const cellText = (row: number, col: number) => {
+  const r1 = 13 - Math.min(row, col);
+  const r2 = 13 - Math.max(row, col);
+  return ranks[r1] + ranks[r2] + ["s", "", "o"][Math.sign(row - col) + 1];
+};
 
-    let draggingMode = "none" as DraggingMode;
+const cellIndex = (row: number, col: number) => {
+  return 13 * (row - 1) + col - 1;
+};
 
-    const onUpdate = async () => {
-      rangeStoreRaw.set(
-        await invoke("range_raw_data", { player: props.player })
-      );
-      rangeText.value = await invoke("range_to_string", {
-        player: props.player,
-      });
-      rangeTextError.value = "";
-      numCombos.value = rangeStoreRaw.reduce((acc, cur) => acc + cur, 0);
-    };
+const cellValue = (row: number, col: number) => {
+  return config.range[props.player][cellIndex(row, col)];
+};
 
-    const update = async (row: number, col: number, weight: number) => {
-      const idx = 13 * (row - 1) + col - 1;
-      await invoke("range_update", {
-        payload: { player: props.player, row, col, weight: weight / 100 },
-      });
-      rangeStore[idx] = weight;
-      await onUpdate();
-    };
+const onUpdate = async () => {
+  config.rangeRaw[props.player] = await invokes.rangeRawData(props.player);
+  rangeText.value = await invokes.rangeToString(props.player);
+  rangeTextError.value = "";
+  numCombos.value = config.rangeRaw[props.player].reduce((a, b) => a + b, 0);
+};
 
-    const cellText = (row: number, col: number) => {
-      const r1 = 13 - Math.min(row, col);
-      const r2 = 13 - Math.max(row, col);
-      return ranks[r1] + ranks[r2] + ["s", "", "o"][Math.sign(row - col) + 1];
-    };
+const update = async (row: number, col: number, weight: number) => {
+  const idx = 13 * (row - 1) + col - 1;
+  await invokes.rangeUpdate(props.player, row, col, weight / 100);
+  config.range[props.player][idx] = weight;
+  await onUpdate();
+};
 
-    const onRangeTextChange = async () => {
-      const trimmed = rangeText.value.replace(trimRegex, "$1").trim();
-      const ranges = trimmed.split(",");
+const onRangeTextChange = async () => {
+  const trimmed = rangeText.value.replace(trimRegex, "$1").trim();
+  const ranges = trimmed.split(",");
 
-      if (ranges[ranges.length - 1] === "") {
-        ranges.pop();
-      }
+  if (ranges[ranges.length - 1] === "") {
+    ranges.pop();
+  }
 
-      for (const range of ranges) {
-        if (!rangeRegex.test(range)) {
-          rangeTextError.value = `Failed to parse range: ${
-            range || "(empty string)"
-          }`;
-          return;
-        }
-      }
+  for (const range of ranges) {
+    if (!rangeRegex.test(range)) {
+      rangeTextError.value = `Failed to parse range: ${
+        range || "(empty string)"
+      }`;
+      return;
+    }
+  }
 
-      const errorString = await invoke("range_from_string", {
-        payload: { player: props.player, string: trimmed },
-      });
+  const errorString = await invokes.rangeFromString(props.player, trimmed);
 
-      if (errorString) {
-        rangeTextError.value = errorString as string;
-      } else {
-        const weights: number[] = await invoke("range_get_weights", {
-          player: props.player,
-        });
-        for (let i = 0; i < 13 * 13; ++i) {
-          rangeStore[i] = weights[i] * 100;
-        }
-        await onUpdate();
-      }
-    };
+  if (errorString) {
+    rangeTextError.value = errorString;
+  } else {
+    const weights = await invokes.rangeGetWeights(props.player);
+    for (let i = 0; i < 13 * 13; ++i) {
+      config.range[props.player][i] = weights[i] * 100;
+    }
+    await onUpdate();
+  }
+};
 
-    const dragStart = (row: number, col: number) => {
-      const idx = 13 * (row - 1) + col - 1;
+const dragStart = (row: number, col: number) => {
+  const idx = 13 * (row - 1) + col - 1;
 
-      if (rangeStore[idx] !== weight.value) {
-        draggingMode = "enabling";
-        update(row, col, weight.value);
-      } else {
-        draggingMode = "disabling";
-        update(row, col, 0);
-      }
-    };
+  if (config.range[props.player][idx] !== weight.value) {
+    draggingMode = "enabling";
+    update(row, col, weight.value);
+  } else {
+    draggingMode = "disabling";
+    update(row, col, 0);
+  }
+};
 
-    const dragEnd = () => {
-      draggingMode = "none";
-    };
+const dragEnd = () => {
+  draggingMode = "none";
+};
 
-    const mouseEnter = (row: number, col: number) => {
-      if (draggingMode === "enabling") {
-        update(row, col, weight.value);
-      } else if (draggingMode === "disabling") {
-        update(row, col, 0);
-      }
-    };
+const mouseEnter = (row: number, col: number) => {
+  if (draggingMode === "enabling") {
+    update(row, col, weight.value);
+  } else if (draggingMode === "disabling") {
+    update(row, col, 0);
+  }
+};
 
-    const hasWeight = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1] > 0;
-    };
+const onWeightChange = () => {
+  weight.value = Math.round(Math.max(0, Math.min(100, weight.value)));
+};
 
-    const isWeightFull = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1] === 100;
-    };
+const clearRange = async () => {
+  await invokes.rangeClear(props.player);
+  config.range[props.player].fill(0);
+  config.rangeRaw[props.player].fill(0);
+  rangeText.value = "";
+  rangeTextError.value = "";
+  weight.value = 100;
+  numCombos.value = 0;
+};
 
-    const weightPercent = (row: number, col: number) => {
-      return rangeStore[13 * (row - 1) + col - 1].toFixed(0) + "%";
-    };
-
-    const onWeightChange = () => {
-      weight.value = Math.round(Math.max(0, Math.min(100, weight.value)));
-    };
-
-    const clearRange = async () => {
-      await invoke("range_clear", { player: props.player });
-      rangeStore.fill(0);
-      rangeStoreRaw.fill(0);
-      rangeText.value = "";
-      rangeTextError.value = "";
-      weight.value = 100;
-      numCombos.value = 0;
-    };
-
-    const loadRange = (rangeStr: string) => {
-      rangeText.value = rangeStr;
-      onRangeTextChange();
-    };
-
-    return {
-      rangeText,
-      rangeTextError,
-      weight,
-      numCombos,
-      cellText,
-      onRangeTextChange,
-      dragStart,
-      dragEnd,
-      mouseEnter,
-      hasWeight,
-      isWeightFull,
-      weightPercent,
-      onWeightChange,
-      clearRange,
-      loadRange,
-    };
-  },
-});
+const loadRange = (rangeStr: unknown) => {
+  rangeText.value = rangeStr as string;
+  onRangeTextChange();
+};
 </script>

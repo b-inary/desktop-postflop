@@ -1,4 +1,4 @@
 dist/
 node_modules/
 .eslintrc.cjs
-*.config.js
+*.config.cjs

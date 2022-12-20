@@ -1,29 +1,29 @@
 <template>
-  <aside
-    class="flex flex-col shrink-0 w-[13.5rem] my-4 pl-2 overflow-y-auto border-r-2"
-    style="height: calc(100vh - 2rem)"
-  >
-    <button :class="itemStyle('OOPRange')" @click="store.mainView = 'OOPRange'">
-      Range 1 (OOP)
+  <aside class="flex flex-col shrink-0 w-56 my-4 overflow-y-auto border-r-2">
+    <button
+      :class="itemStyle('oop-range')"
+      @click="store.sideView = 'oop-range'"
+    >
+      OOP Range
       <span class="flex my-2 justify-center">
-        <range-mini-viewer :player="0" />
+        <RangeMiniViewer :player="0" />
       </span>
     </button>
 
-    <button :class="itemStyle('IPRange')" @click="store.mainView = 'IPRange'">
-      Range 2 (IP)
+    <button :class="itemStyle('ip-range')" @click="store.sideView = 'ip-range'">
+      IP Range
       <span class="flex my-2 justify-center">
-        <range-mini-viewer :player="1" />
+        <RangeMiniViewer :player="1" />
       </span>
     </button>
 
-    <button :class="itemStyle('Board')" @click="store.mainView = 'Board'">
+    <button :class="itemStyle('board')" @click="store.sideView = 'board'">
       Board
-      <span class="flex justify-center">
+      <span class="flex mt-1 justify-center font-semibold">
         <span
           v-for="item in boardTexts"
           :key="item.rank + item.suit"
-          :class="'inline-block mx-px ' + item.colorClass"
+          :class="'inline-block mx-0.5 ' + item.colorClass"
         >
           {{ item.rank + item.suit }}
         </span>
@@ -31,68 +31,54 @@
     </button>
 
     <button
-      :class="itemStyle('TreeConfig')"
-      @click="store.mainView = 'TreeConfig'"
+      :class="itemStyle('tree-config')"
+      @click="store.sideView = 'tree-config'"
     >
       Tree Configuration
     </button>
 
     <button
-      :class="itemStyle('RunSolver')"
-      @click="store.mainView = 'RunSolver'"
+      :class="itemStyle('run-solver')"
+      @click="store.sideView = 'run-solver'"
     >
       Run Solver
     </button>
 
-    <button :class="itemStyle('Result')" @click="store.mainView = 'Result'">
-      Result
-    </button>
-
-    <button :class="itemStyle('About')" @click="store.mainView = 'About'">
+    <button :class="itemStyle('about')" @click="store.sideView = 'about'">
       About
     </button>
   </aside>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent } from "vue";
-import { MainView, cardText, useStore, useConfigStore } from "../store";
+<script setup lang="ts">
+import { computed } from "vue";
+import { SideView, useStore, useConfigStore } from "../store";
+import { cardText } from "../utils";
 
 import RangeMiniViewer from "./RangeMiniViewer.vue";
 
-export default defineComponent({
-  components: {
-    RangeMiniViewer,
-  },
+const store = useStore();
+const config = useConfigStore();
 
-  setup() {
-    const store = useStore();
-    const config = useConfigStore();
+const itemStyle = (view: SideView) => {
+  return (
+    "side-bar-item " + (view === store.sideView ? "font-bold bg-blue-100" : "")
+  );
+};
 
-    const boardTexts = computed(() => {
-      if (config.board.length === 0) {
-        return [{ rank: "-", suit: "", colorClass: "text-black" }];
-      } else {
-        return config.board.map(cardText);
-      }
-    });
-
-    return {
-      store,
-      boardTexts,
-      itemStyle: (view: MainView) => {
-        return (
-          "side-bar-item " +
-          (view === store.mainView ? "border-blue-600" : "border-transparent")
-        );
-      },
-    };
-  },
+const boardTexts = computed(() => {
+  if (config.board.length === 0) {
+    return [{ rank: "-", suit: "", colorClass: "text-black" }];
+  } else {
+    return config.board.map(cardText);
+  }
 });
 </script>
 
 <style scoped>
 .side-bar-item {
-  @apply block mx-2 my-1 px-2.5 py-1.5 border-[3px] rounded-xl text-left select-none;
+  @apply block mx-2 my-1 px-4 py-3 rounded-3xl;
+  @apply text-left text-[1.0625rem] select-none;
+  @apply transition-colors hover:bg-blue-100;
 }
 </style>

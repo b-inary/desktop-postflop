@@ -1,5 +1,5 @@
 <template>
-  <p class="flex my-1 items-center">
+  <div class="flex my-1 items-center">
     Number of threads:
     <input
       v-model="numThreads"
@@ -7,28 +7,67 @@
       :class="
         'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
         (numThreads < 1 || numThreads > 64 || numThreads % 1 !== 0
-          ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+          ? 'input-error'
           : '')
       "
       min="1"
       max="64"
     />
     <button
-      class="ml-3 button button-blue"
+      class="ml-3 button-base button-blue"
       :disabled="isTreeBuilding || store.isSolverRunning || store.isFinalizing"
       @click="buildTree"
     >
-      Build tree
+      Build New Tree
     </button>
-  </p>
+  </div>
 
-  <p class="my-1">Status: {{ treeStatus }}</p>
+  <div class="my-1">Status: {{ treeStatus }}</div>
 
-  <div v-if="isTreeBuilt" class="mt-4">
-    <p>
+  <div v-if="isTreeBuilt" class="mt-3">
+    <div>
+      Precision mode:
+      <Tippy
+        class="inline-block cursor-help"
+        max-width="500px"
+        placement="bottom"
+        trigger="mouseenter click"
+        :delay="[200, 0]"
+        :interactive="true"
+      >
+        <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+        <template #content>
+          <div class="px-1 py-0.5 text-justify">
+            Precision mode mainly affects memory usage, but it also has several
+            other effects.
+            <ul class="pl-6 list-disc">
+              <li class="mt-1">
+                Memory efficiency: 16-bit integer > 32-bit FP. The 16-bit
+                integer mode uses only about half the memory as the 32-bit FP
+                mode.
+              </li>
+              <li class="mt-1">
+                Calculation speed: depends on the environment. The 32-bit FP
+                mode requires fewer execution instructions than the 16-bit
+                integer mode. However, memory reads and writes can become a
+                bottleneck in a highly multithreaded environment, and in such
+                situations, the 16-bit integer mode may result in better
+                performance.
+              </li>
+              <li class="mt-1">
+                Significant figures: 32-bit FP (about 7 digits) > 16-bit integer
+                (about 4 digits). The 16-bit integer mode is not suitable for
+                satisfying a target exploitability below 0.1%.
+              </li>
+            </ul>
+          </div>
+        </template>
+      </Tippy>
+    </div>
+    <div class="mt-1 ml-2">
       <label
         :class="
-          memoryUsage > 0.95 * availableMemory
+          memoryUsage > maxMemoryUsage
             ? 'text-gray-400'
             : !store.hasSolverRun
             ? 'cursor-pointer'
@@ -41,28 +80,23 @@
           type="radio"
           name="compression"
           :value="false"
-          :disabled="store.hasSolverRun || memoryUsage > 0.95 * availableMemory"
+          :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
         />
-        No compression: requires
+        <span class="inline-block w-[6.75rem] ml-1">32-bit FP:</span>
+        needs
         {{
           memoryUsage >= 1023.5 * 1024 * 1024
-            ? (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-            : (memoryUsage / (1024 * 1024)).toFixed(0) + " MB"
+            ? (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+            : (memoryUsage / (1024 * 1024)).toFixed(0) + "MB"
         }}
-        of RAM
-        {{
-          memoryUsage <= 0.85 * availableMemory
-            ? ""
-            : memoryUsage <= 0.95 * availableMemory
-            ? "(not recommended)"
-            : "(out of memory)"
-        }}
+        RAM
+        {{ memoryUsage > maxMemoryUsage ? "(out of memory)" : "" }}
       </label>
-    </p>
-    <p>
+    </div>
+    <div class="ml-2">
       <label
         :class="
-          memoryUsageCompressed > 0.95 * availableMemory
+          memoryUsageCompressed > maxMemoryUsage
             ? 'text-gray-400'
             : !store.hasSolverRun
             ? 'cursor-pointer'
@@ -76,43 +110,76 @@
           name="compression"
           :value="true"
           :disabled="
-            store.hasSolverRun || memoryUsageCompressed > 0.95 * availableMemory
+            store.hasSolverRun || memoryUsageCompressed > maxMemoryUsage
           "
         />
-        Use compression: requires
+        <span class="inline-block w-[6.75rem] ml-1">16-bit integer:</span>
+        needs
         {{
           memoryUsageCompressed >= 1023.5 * 1024 * 1024
-            ? (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) + " GB"
-            : (memoryUsageCompressed / (1024 * 1024)).toFixed(0) + " MB"
+            ? (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+            : (memoryUsageCompressed / (1024 * 1024)).toFixed(0) + "MB"
         }}
-        of RAM
-        {{
-          memoryUsageCompressed <= 0.95 * availableMemory
-            ? ""
-            : "(out of memory)"
-        }}
+        RAM
+        {{ memoryUsageCompressed > maxMemoryUsage ? "(out of memory)" : "" }}
       </label>
-    </p>
+    </div>
+    <div v-if="memoryUsage > maxMemoryUsage" class="mt-1.5">
+      RAM limit: {{ maxMemoryUsage }}GB (= {{ availableMemory }}GB available -
+      5% margin * {{ totalMemory }}GB total)
+    </div>
 
-    <p class="mt-4">
+    <div class="mt-4">
       Target exploitability:
+      <Tippy
+        class="inline-block cursor-help"
+        max-width="500px"
+        placement="bottom"
+        trigger="mouseenter click"
+        :delay="[200, 0]"
+        :interactive="true"
+      >
+        <QuestionMarkCircleIcon class="w-5 h-5 text-gray-600" />
+        <template #content>
+          <div class="px-1 py-0.5 text-justify">
+            <div>
+              Specifies the acceptable distance to the Nash equilibrium. A lower
+              value produces more accurate results but also requires more
+              computation time.
+            </div>
+            <div class="mt-3">
+              <span class="underline">A more detailed description:</span>
+              If a Nash equilibrium solution is obtained, the strategies of both
+              players become MESs (Maximally Exploitative Strategies). Using
+              this property, we define the distance to the Nash equilibrium of
+              the obtained strategy as follows:
+            </div>
+            <div class="my-1 text-center">
+              Distance = (Opponent's MES EV) - (Opponent's obtained EV).
+            </div>
+            <div>
+              This distance is always non-negative and is zero if and only if
+              the obtained strategy is a part of a certain Nash equilibrium. The
+              exploitability is defined as the average distance of both players.
+            </div>
+          </div>
+        </template>
+      </Tippy>
       <input
         v-model="targetExploitability"
         type="number"
         :class="
-          'w-20 ml-2 px-2 py-1 rounded-lg text-sm text-center ' +
-          (targetExploitability <= 0
-            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
-            : '')
+          'w-20 ml-3 px-2 py-1 rounded-lg text-sm text-center ' +
+          (targetExploitability <= 0 ? 'input-error' : '')
         "
         :disabled="store.hasSolverRun && !store.isSolverPaused"
         min="0"
         step="0.05"
       />
       %
-    </p>
+    </div>
 
-    <p class="mt-1">
+    <div class="mt-1">
       Maximum number of iterations:
       <input
         v-model="maxIterations"
@@ -122,21 +189,21 @@
           (maxIterations < 0 ||
           maxIterations % 1 !== 0 ||
           maxIterations > 100000
-            ? 'ring-1 ring-red-600 border-red-600 bg-red-50'
+            ? 'input-error'
             : '')
         "
         :disabled="store.hasSolverRun && !store.isSolverPaused"
         min="0"
         max="100000"
       />
-    </p>
+    </div>
 
-    <p class="flex mt-6 gap-3">
+    <div class="flex mt-6 gap-3">
       <button
-        class="button button-blue"
+        class="button-base button-blue"
         :disabled="
           store.hasSolverRun ||
-          memoryUsageCompressed > 0.95 * availableMemory ||
+          memoryUsageCompressed > maxMemoryUsage ||
           targetExploitability <= 0 ||
           maxIterations < 0 ||
           maxIterations % 1 !== 0 ||
@@ -144,10 +211,10 @@
         "
         @click="runSolver"
       >
-        Run solver
+        Run Solver
       </button>
       <button
-        class="button button-red"
+        class="button-base button-red"
         :disabled="!store.isSolverRunning"
         @click="() => (terminateFlag = true)"
       >
@@ -155,7 +222,7 @@
       </button>
       <button
         v-if="!store.isSolverPaused"
-        class="button button-green"
+        class="button-base button-green"
         :disabled="!store.isSolverRunning"
         @click="() => (pauseFlag = true)"
       >
@@ -163,7 +230,7 @@
       </button>
       <button
         v-else
-        class="button button-green"
+        class="button-base button-green"
         :disabled="
           targetExploitability <= 0 ||
           maxIterations < 0 ||
@@ -174,7 +241,7 @@
       >
         Resume
       </button>
-    </p>
+    </div>
 
     <div v-if="store.hasSolverRun" class="mt-6">
       <div class="flex items-center">
@@ -201,8 +268,8 @@
   </div>
 </template>
 
-<script lang="ts">
-import { computed, defineComponent, ref } from "vue";
+<script setup lang="ts">
+import { computed, ref } from "vue";
 import {
   useStore,
   useConfigStore,
@@ -210,7 +277,11 @@ import {
   saveConfig,
   saveConfigTmp,
 } from "../store";
-import { invoke } from "@tauri-apps/api";
+import { MAX_AMOUNT, convertBetString } from "../utils";
+import * as invokes from "../invokes";
+
+import { Tippy } from "vue-tippy";
+import { QuestionMarkCircleIcon } from "@heroicons/vue/20/solid";
 
 const checkConfig = (
   config: ReturnType<typeof useConfigStore>
@@ -223,7 +294,7 @@ const checkConfig = (
     return "Starting pot must be positive";
   }
 
-  if (config.startingPot > 100000) {
+  if (config.startingPot > MAX_AMOUNT) {
     return "Starting pot is too large";
   }
 
@@ -235,7 +306,7 @@ const checkConfig = (
     return "Effective stack must be positive";
   }
 
-  if (config.effectiveStack > 100000) {
+  if (config.effectiveStack > MAX_AMOUNT) {
     return "Effective stack is too large";
   }
 
@@ -285,269 +356,226 @@ const checkConfig = (
     return "Invalid merging threshold";
   }
 
+  if (
+    config.expectedBoardLength > 0 &&
+    config.board.length !== config.expectedBoardLength
+  ) {
+    return `Invalid board (expected ${config.expectedBoardLength} cards)`;
+  }
+
   return null;
 };
 
-const convertBetString = (s: string): string => {
-  if (s === "") return s;
-  return s
-    .split(", ")
-    .map((e) => ("acex".includes(e[e.length - 1]) ? e : e + "%"))
-    .join(",");
+const store = useStore();
+const config = useConfigStore();
+const tmpConfig = useTmpConfigStore();
+
+const numThreads = ref(navigator.hardwareConcurrency || 1);
+const targetExploitability = ref(0.3);
+const maxIterations = ref(1000);
+
+const isTreeBuilding = ref(false);
+const isTreeBuilt = ref(false);
+const treeStatus = ref("Module not loaded");
+const memoryUsage = ref(0);
+const memoryUsageCompressed = ref(0);
+const maxMemoryUsage = ref(0);
+const availableMemory = ref(0);
+const totalMemory = ref(0);
+const isCompressionEnabled = ref(false);
+const terminateFlag = ref(false);
+const pauseFlag = ref(false);
+const currentIteration = ref(-1);
+const exploitability = ref(Number.POSITIVE_INFINITY);
+const elapsedTimeMs = ref(-1);
+
+let startTime = 0;
+let exploitabilityUpdated = false;
+
+const iterationText = computed(() => {
+  if (currentIteration.value === -1) {
+    return "Allocating memory...";
+  } else {
+    return `Iteration: ${currentIteration.value}`;
+  }
+});
+
+const exploitabilityText = computed(() => {
+  if (!Number.isFinite(exploitability.value)) {
+    return "";
+  } else {
+    const valueText = exploitability.value.toFixed(2);
+    const percent = (exploitability.value * 100) / config.startingPot;
+    const percentText = `${percent.toFixed(2)}%`;
+    return `Exploitability: ${valueText} (${percentText})`;
+  }
+});
+
+const timeText = computed(() => {
+  if (elapsedTimeMs.value === -1 || !store.isSolverFinished) {
+    return "";
+  } else {
+    return `Time: ${(elapsedTimeMs.value / 1000).toFixed(2)}s`;
+  }
+});
+
+const buildTree = async () => {
+  isTreeBuilt.value = false;
+
+  if (numThreads.value < 1 || numThreads.value % 1 !== 0) {
+    treeStatus.value = "Error: Invalid number of threads";
+    return;
+  }
+
+  if (numThreads.value > 64) {
+    treeStatus.value = "Error: Too many threads";
+    return;
+  }
+
+  const configError = checkConfig(config);
+  if (configError !== null) {
+    treeStatus.value = `Error: ${configError}`;
+    return;
+  }
+
+  saveConfigTmp();
+  isTreeBuilding.value = true;
+  treeStatus.value = "Building tree...";
+
+  const errorString = await invokes.gameInit(
+    numThreads.value,
+    tmpConfig.board,
+    tmpConfig.startingPot,
+    tmpConfig.effectiveStack,
+    tmpConfig.rakePercent / 100,
+    tmpConfig.rakeCap,
+    tmpConfig.donkOption,
+    convertBetString(tmpConfig.oopFlopBet),
+    convertBetString(tmpConfig.oopFlopRaise),
+    convertBetString(tmpConfig.oopTurnBet),
+    convertBetString(tmpConfig.oopTurnRaise),
+    tmpConfig.donkOption ? convertBetString(tmpConfig.oopTurnDonk) : "",
+    convertBetString(tmpConfig.oopRiverBet),
+    convertBetString(tmpConfig.oopRiverRaise),
+    tmpConfig.donkOption ? convertBetString(tmpConfig.oopRiverDonk) : "",
+    convertBetString(tmpConfig.ipFlopBet),
+    convertBetString(tmpConfig.ipFlopRaise),
+    convertBetString(tmpConfig.ipTurnBet),
+    convertBetString(tmpConfig.ipTurnRaise),
+    convertBetString(tmpConfig.ipRiverBet),
+    convertBetString(tmpConfig.ipRiverRaise),
+    tmpConfig.addAllInThreshold / 100,
+    tmpConfig.forceAllInThreshold / 100,
+    tmpConfig.mergingThreshold / 100,
+    tmpConfig.addedLines,
+    tmpConfig.removedLines
+  );
+
+  if (errorString) {
+    isTreeBuilding.value = false;
+    treeStatus.value = "Error: " + errorString;
+    return;
+  }
+
+  saveConfig();
+
+  [memoryUsage.value, memoryUsageCompressed.value] =
+    await invokes.gameMemoryUsage();
+
+  [availableMemory.value, totalMemory.value] = await invokes.memory();
+  maxMemoryUsage.value = Math.max(
+    Math.floor(availableMemory.value - 0.05 * totalMemory.value),
+    0
+  );
+
+  if (
+    memoryUsage.value > maxMemoryUsage.value &&
+    memoryUsageCompressed.value <= maxMemoryUsage.value
+  ) {
+    isCompressionEnabled.value = true;
+  }
+
+  const threadText = `${numThreads.value} thread${
+    numThreads.value === 1 ? "" : "s"
+  }`;
+
+  isTreeBuilding.value = false;
+  isTreeBuilt.value = true;
+  treeStatus.value = `Successfully built tree (${threadText})`;
+
+  store.isSolverRunning = false;
+  store.isSolverPaused = false;
+  store.isSolverFinished = false;
 };
 
-export default defineComponent({
-  setup() {
-    const store = useStore();
-    const config = useConfigStore();
-    const tmpConfig = useTmpConfigStore();
+const runSolver = async () => {
+  terminateFlag.value = false;
+  pauseFlag.value = false;
+  currentIteration.value = -1;
+  exploitability.value = Number.POSITIVE_INFINITY;
+  elapsedTimeMs.value = -1;
 
-    const numThreads = ref(navigator.hardwareConcurrency || 1);
-    const targetExploitability = ref(0.3);
-    const maxIterations = ref(1000);
+  store.isSolverRunning = true;
 
-    const isTreeBuilding = ref(false);
-    const isTreeBuilt = ref(false);
-    const treeStatus = ref("Module not loaded");
-    const availableMemory = ref(0);
-    const memoryUsage = ref(0);
-    const memoryUsageCompressed = ref(0);
-    const isCompressionEnabled = ref(false);
-    const terminateFlag = ref(false);
-    const pauseFlag = ref(false);
-    const currentIteration = ref(-1);
-    const exploitability = ref(Number.POSITIVE_INFINITY);
-    const elapsedTimeMs = ref(-1);
+  startTime = performance.now();
 
-    let startTime = 0;
-    let exploitabilityUpdated = false;
+  await invokes.gameAllocateMemory(isCompressionEnabled.value);
 
-    const iterationText = computed(() => {
-      if (currentIteration.value === -1) {
-        return "Allocating memory...";
-      } else {
-        return `Iteration: ${currentIteration.value}`;
-      }
-    });
+  currentIteration.value = 0;
+  exploitability.value = Math.max(await invokes.gameExploitability(), 0);
+  exploitabilityUpdated = true;
 
-    const exploitabilityText = computed(() => {
-      if (!Number.isFinite(exploitability.value)) {
-        return "";
-      } else {
-        const valueText = exploitability.value.toFixed(2);
-        const percent = (exploitability.value * 100) / config.startingPot;
-        const percentText = `${percent.toFixed(2)}%`;
-        return `Exploitability: ${valueText} (${percentText})`;
-      }
-    });
+  await resumeSolver();
+};
 
-    const timeText = computed(() => {
-      if (elapsedTimeMs.value === -1 || !store.isSolverFinished) {
-        return "";
-      } else {
-        return `Time: ${(elapsedTimeMs.value / 1000).toFixed(2)}s`;
-      }
-    });
+const resumeSolver = async () => {
+  store.isSolverRunning = true;
+  store.isSolverPaused = false;
 
-    const buildTree = async () => {
-      isTreeBuilt.value = false;
+  if (startTime === 0) {
+    startTime = performance.now();
+  }
 
-      if (numThreads.value < 1 || numThreads.value % 1 !== 0) {
-        treeStatus.value = "Error: Invalid number of threads";
-        return;
-      }
+  const target = (config.startingPot * targetExploitability.value) / 100;
 
-      if (numThreads.value > 64) {
-        treeStatus.value = "Error: Too many threads";
-        return;
-      }
-
-      const configError = checkConfig(config);
-      if (configError !== null) {
-        treeStatus.value = `Error: ${configError}`;
-        return;
-      }
-
-      saveConfigTmp();
-      isTreeBuilding.value = true;
-      treeStatus.value = "Building tree...";
-
-      const errorString = await invoke("game_init", {
-        payload: {
-          num_threads: numThreads.value,
-          board: tmpConfig.board,
-          starting_pot: tmpConfig.startingPot,
-          effective_stack: tmpConfig.effectiveStack,
-          donk_option: tmpConfig.donkOption,
-          oop_flop_bet: convertBetString(tmpConfig.oopFlopBet),
-          oop_flop_raise: convertBetString(tmpConfig.oopFlopRaise),
-          oop_turn_bet: convertBetString(tmpConfig.oopTurnBet),
-          oop_turn_raise: convertBetString(tmpConfig.oopTurnRaise),
-          oop_turn_donk: convertBetString(tmpConfig.oopTurnDonk),
-          oop_river_bet: convertBetString(tmpConfig.oopRiverBet),
-          oop_river_raise: convertBetString(tmpConfig.oopRiverRaise),
-          oop_river_donk: convertBetString(tmpConfig.oopRiverDonk),
-          ip_flop_bet: convertBetString(tmpConfig.ipFlopBet),
-          ip_flop_raise: convertBetString(tmpConfig.ipFlopRaise),
-          ip_turn_bet: convertBetString(tmpConfig.ipTurnBet),
-          ip_turn_raise: convertBetString(tmpConfig.ipTurnRaise),
-          ip_river_bet: convertBetString(tmpConfig.ipRiverBet),
-          ip_river_raise: convertBetString(tmpConfig.ipRiverRaise),
-          add_allin_threshold: tmpConfig.addAllInThreshold / 100,
-          force_allin_threshold: tmpConfig.forceAllInThreshold / 100,
-          merging_threshold: tmpConfig.mergingThreshold / 100,
-        },
-      });
-
-      if (errorString) {
-        isTreeBuilding.value = false;
-        treeStatus.value = "Error: " + errorString;
-        return;
-      }
-
-      saveConfig();
-
-      availableMemory.value = await invoke("available_memory");
-
-      [memoryUsage.value, memoryUsageCompressed.value] = await invoke(
-        "game_memory_usage"
-      );
-
-      if (
-        memoryUsage.value > 0.85 * availableMemory.value &&
-        memoryUsageCompressed.value <= 0.95 * availableMemory.value
-      ) {
-        isCompressionEnabled.value = true;
-      }
-
-      const threadText = `${numThreads.value} thread${
-        numThreads.value === 1 ? "" : "s"
-      }`;
-
-      isTreeBuilding.value = false;
-      isTreeBuilt.value = true;
-      treeStatus.value = `Successfully built tree (${threadText})`;
-
-      store.isSolverRunning = false;
-      store.isSolverPaused = false;
-      store.isSolverFinished = false;
-    };
-
-    const runSolver = async () => {
-      terminateFlag.value = false;
-      pauseFlag.value = false;
-      currentIteration.value = -1;
-      exploitability.value = Number.POSITIVE_INFINITY;
-      elapsedTimeMs.value = -1;
-
-      store.isSolverRunning = true;
-
-      startTime = performance.now();
-
-      await invoke("game_allocate_memory", {
-        enableCompression: isCompressionEnabled.value,
-      });
-
-      currentIteration.value = 0;
-      exploitability.value = Math.max(await invoke("game_exploitability"), 0);
-      exploitabilityUpdated = true;
-
-      await resumeSolver();
-    };
-
-    const resumeSolver = async () => {
-      store.isSolverRunning = true;
-      store.isSolverPaused = false;
-
-      if (startTime === 0) {
-        startTime = performance.now();
-      }
-
-      const target = (config.startingPot * targetExploitability.value) / 100;
-
-      while (
-        !terminateFlag.value &&
-        currentIteration.value < maxIterations.value &&
-        exploitability.value > target
-      ) {
-        if (pauseFlag.value) {
-          const end = performance.now();
-          elapsedTimeMs.value += end - startTime;
-          startTime = 0;
-          pauseFlag.value = false;
-          store.isSolverRunning = false;
-          store.isSolverPaused = true;
-          return;
-        }
-
-        const payload = { currentIteration: currentIteration.value };
-        await invoke("game_solve_step", payload);
-        ++currentIteration.value;
-        exploitabilityUpdated = false;
-
-        if (currentIteration.value % 10 === 0) {
-          exploitability.value = await invoke("game_exploitability");
-          exploitability.value = Math.max(exploitability.value, 0);
-          exploitabilityUpdated = true;
-        }
-      }
-
-      if (!exploitabilityUpdated) {
-        exploitability.value = Math.max(await invoke("game_exploitability"), 0);
-      }
-
-      store.isSolverRunning = false;
-      store.isFinalizing = true;
-
-      await invoke("game_finalize");
-
-      store.isFinalizing = false;
-      store.isSolverFinished = true;
-
+  while (
+    !terminateFlag.value &&
+    currentIteration.value < maxIterations.value &&
+    exploitability.value > target
+  ) {
+    if (pauseFlag.value) {
       const end = performance.now();
       elapsedTimeMs.value += end - startTime;
-    };
+      startTime = 0;
+      pauseFlag.value = false;
+      store.isSolverRunning = false;
+      store.isSolverPaused = true;
+      return;
+    }
 
-    return {
-      store,
-      numThreads,
-      targetExploitability,
-      maxIterations,
-      isTreeBuilding,
-      isTreeBuilt,
-      treeStatus,
-      availableMemory,
-      memoryUsage,
-      memoryUsageCompressed,
-      isCompressionEnabled,
-      terminateFlag,
-      pauseFlag,
-      iterationText,
-      exploitabilityText,
-      timeText,
-      buildTree,
-      runSolver,
-      resumeSolver,
-    };
-  },
-});
+    await invokes.gameSolveStep(currentIteration.value);
+    ++currentIteration.value;
+    exploitabilityUpdated = false;
+
+    if (currentIteration.value % 10 === 0) {
+      exploitability.value = Math.max(await invokes.gameExploitability(), 0);
+      exploitabilityUpdated = true;
+    }
+  }
+
+  if (!exploitabilityUpdated) {
+    exploitability.value = Math.max(await invokes.gameExploitability(), 0);
+  }
+
+  store.isSolverRunning = false;
+  store.isFinalizing = true;
+
+  await invokes.gameFinalize();
+
+  store.isFinalizing = false;
+  store.isSolverFinished = true;
+
+  const end = performance.now();
+  elapsedTimeMs.value += end - startTime;
+};
 </script>
-
-<style scoped>
-.button {
-  @apply rounded-lg shadow-sm px-3.5 py-1.5 text-white text-sm font-medium;
-  @apply focus:outline-none focus:ring-4 disabled:opacity-40;
-}
-
-.button-blue {
-  @apply bg-blue-600 hover:bg-blue-700 focus:ring-blue-300 disabled:bg-blue-600;
-}
-
-.button-red {
-  @apply bg-red-600 hover:bg-red-700 focus:ring-red-300 disabled:bg-red-600;
-}
-
-.button-green {
-  @apply bg-green-600 hover:bg-green-700 focus:ring-green-300 disabled:bg-green-600;
-}
-</style>

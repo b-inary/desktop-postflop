@@ -1,8 +1,9 @@
 {
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
   "build": {
     "beforeBuildCommand": "npm run build",
     "beforeDevCommand": "npm run dev",
-    "devPath": "http://localhost:3000",
+    "devPath": "http://localhost:5173",
     "distDir": "../dist"
   },
   "package": {
@@ -12,7 +13,7 @@
   "tauri": {
     "allowlist": {
       "shell": {
-        "open": true
+        "open": "^https://github.com/"
       }
     },
     "bundle": {
@@ -49,17 +50,16 @@
       }
     },
     "security": {
-      "csp": "default-src 'self'"
+      "csp": "default-src 'self'; img-src 'self' data:;"
     },
     "updater": {
       "active": false
     },
     "windows": [
       {
-        "title": "Desktop Postflop v0.1.7",
-        "resizable": true,
-        "width": 1300,
-        "height": 760,
+        "title": "Desktop Postflop",
+        "width": 1350,
+        "height": 810,
         "minWidth": 1080,
         "minHeight": 720
       }

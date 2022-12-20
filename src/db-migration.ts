@@ -1,3 +1,5 @@
+import { MAX_AMOUNT } from "./utils";
+
 export type ConfigValue1 = {
   startingPot: number;
   effectiveStack: number;
@@ -21,6 +23,8 @@ export type ConfigValue1 = {
 type ConfigValue2 = {
   startingPot: number;
   effectiveStack: number;
+  rakePercent: number;
+  rakeCap: number;
   donkOption: number;
   oopFlopBet: string;
   oopFlopRaise: string;
@@ -39,6 +43,7 @@ type ConfigValue2 = {
   addAllInThreshold: number;
   forceAllInThreshold: number;
   mergingThreshold: number;
+  expectedBoardLength: number;
   addedLines: string;
   removedLines: string;
 };
@@ -53,8 +58,10 @@ const migrateBetString1to2 = (s: string): string => {
 
 export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
   return {
-    startingPot: value.startingPot,
-    effectiveStack: value.effectiveStack,
+    startingPot: Math.min(value.startingPot, MAX_AMOUNT),
+    effectiveStack: Math.min(value.effectiveStack, MAX_AMOUNT),
+    rakePercent: 0,
+    rakeCap: 0,
     donkOption: 0,
     oopFlopBet: migrateBetString1to2(value.oopFlopBetStr),
     oopFlopRaise: migrateBetString1to2(value.oopFlopRaiseStr),
@@ -73,6 +80,7 @@ export const migrateConfig1to2 = (value: ConfigValue1): ConfigValue2 => {
     addAllInThreshold: value.addAllInThreshold,
     forceAllInThreshold: value.forceAllInThreshold,
     mergingThreshold: 0,
+    expectedBoardLength: 0,
     addedLines: "",
     removedLines: "",
   };
