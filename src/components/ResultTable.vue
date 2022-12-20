@@ -322,6 +322,9 @@ import {
   TableMode,
 } from "../result-types";
 
+import { save } from "@tauri-apps/api/dialog";
+import { writeTextFile } from "@tauri-apps/api/fs";
+
 import { Tippy } from "vue-tippy";
 import { ArrowTopRightOnSquareIcon } from "@heroicons/vue/24/solid";
 
@@ -870,7 +873,7 @@ const actionBarBg = (index: number, row: number[]) => {
 
 const exportSummaryButton = ref<HTMLAnchorElement | null>(null);
 
-const exportSummary = () => {
+const exportSummary = async () => {
   if (!exportSummaryButton.value) return;
 
   const data: string[] = [];
@@ -941,9 +944,13 @@ const exportSummary = () => {
     }
   }
 
-  const blob = new Blob([data.join("\n")], { type: "text/csv" });
-  const url = URL.createObjectURL(blob);
-  exportSummaryButton.value.href = url;
+  const filePath = await save({
+    defaultPath: "summary.csv",
+    filters: [{ name: "CSV Files", extensions: ["csv"] }],
+  });
+  if (filePath) {
+    await writeTextFile(filePath, data.join("\n"));
+  }
 };
 </script>
 

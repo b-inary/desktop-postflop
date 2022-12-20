@@ -12,9 +12,9 @@
   },
   "tauri": {
     "allowlist": {
-      "shell": {
-        "open": "^https://github.com/"
-      }
+      "dialog": { "save": true },
+      "fs": { "writeFile": true },
+      "shell": { "open": "^https://github.com/" }
     },
     "bundle": {
       "active": true,
@@ -38,7 +38,8 @@
         "exceptionDomain": "",
         "frameworks": [],
         "providerShortName": null,
-        "signingIdentity": null
+        "signingIdentity": null,
+        "minimumSystemVersion": "11.7"
       },
       "resources": [],
       "shortDescription": "",
