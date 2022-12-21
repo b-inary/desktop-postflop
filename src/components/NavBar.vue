@@ -4,7 +4,10 @@
   >
     <div class="flex relative w-full">
       <div class="flex items-center z-10">
-        <span class="px-4 text-lg font-semibold">Desktop Postflop</span>
+        <div class="px-4">
+          <span class="text-lg font-semibold">Desktop Postflop</span>
+          <span class="pl-2 font-semibold text-gray-400">v0.2.0-alpha.0</span>
+        </div>
       </div>
 
       <div class="flex ml-auto h-full items-center z-10">
