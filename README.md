@@ -21,7 +21,7 @@ However, if you want to use the solver for more serious purposes, please conside
   - Faster computation
   - Able to use more than 4GB of memory
 - **Disadvantages**:
-  - Only supports Windows
+  - Distributes only Windows builds
   - Needs to download the program and trust the execution
 
 See the [WASM Postflop repository] for more detailed comparisons, including some commercial solvers.
@@ -34,6 +34,8 @@ See the [WASM Postflop repository] for more detailed comparisons, including some
 - CPU: must support AVX instructions
   - Intel: Sandy Bridge and later
   - AMD: Zen (1st gen) and later
+
+Though we only distribute Windows builds, we have confirmed that the app can be built and run on macOS.
 
 ## Download
 

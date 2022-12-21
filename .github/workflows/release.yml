@@ -7,11 +7,7 @@ on:
 
 jobs:
   release:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform: [windows-latest, macos-latest]
-    runs-on: ${{ matrix.platform }}
+    runs-on: windows-latest
 
     steps:
       - name: Checkout repository
@@ -22,46 +18,23 @@ jobs:
         with:
           node-version: 18
 
-      - name: Setup Rust nightly (Windows)
-        if: matrix.platform == 'windows-latest'
+      - name: Setup Rust nightly
         uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly
-          components: rust-src
-          default: true
-
-      - name: Setup Rust nightly (macOS)
-        if: matrix.platform == 'macos-latest'
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: nightly
-          target: aarch64-apple-darwin
           components: rust-src
           default: true
 
       - name: Install app dependencies
         run: npm ci
 
-      - name: Build the app (Windows)
-        if: matrix.platform == 'windows-latest'
+      - name: Build the app
         run: npm run tauri build -- --target x86_64-pc-windows-msvc -- -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
-      - name: Build the app (macOS)
-        if: matrix.platform == 'macos-latest'
-        run: npm run tauri build -- --target aarch64-apple-darwin -- -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
-
-      - name: Upload artifacts (Windows)
-        if: matrix.platform == 'windows-latest'
+      - name: Upload artifacts
         uses: softprops/action-gh-release@v1
         with:
           draft: true
           files: |
             src-tauri/target/x86_64-pc-windows-msvc/release/Desktop Postflop.exe
             src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Desktop Postflop_*_x64_en-US.msi
-
-      - name: Upload artifacts (macOS)
-        if: matrix.platform == 'macos-latest'
-        uses: softprops/action-gh-release@v1
-        with:
-          draft: true
-          files: src-tauri/target/aarch64-apple-darwin/release/bundle/dmg/Desktop Postflop_*_aarch64.dmg
