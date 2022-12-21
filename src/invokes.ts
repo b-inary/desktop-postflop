@@ -1,6 +1,10 @@
 import { invoke } from "@tauri-apps/api";
 import { Results, ChanceReports } from "./result-types";
 
+export const osName = async (): Promise<"windows" | "macos"> => {
+  return await invoke("os_name");
+};
+
 export const memory = async (): Promise<number[]> => {
   return await invoke("memory");
 };

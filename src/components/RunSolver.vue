@@ -68,7 +68,7 @@
       <label
         :class="
           memoryUsage > maxMemoryUsage
-            ? 'text-gray-400'
+            ? 'opacity-60'
             : !store.hasSolverRun
             ? 'cursor-pointer'
             : ''
@@ -97,7 +97,7 @@
       <label
         :class="
           memoryUsageCompressed > maxMemoryUsage
-            ? 'text-gray-400'
+            ? 'opacity-60'
             : !store.hasSolverRun
             ? 'cursor-pointer'
             : ''
@@ -124,9 +124,20 @@
         {{ memoryUsageCompressed > maxMemoryUsage ? "(out of memory)" : "" }}
       </label>
     </div>
-    <div v-if="memoryUsage > maxMemoryUsage" class="mt-1.5">
-      RAM limit: {{ maxMemoryUsage }}GB (= {{ availableMemory }}GB available -
-      5% margin * {{ totalMemory }}GB total)
+    <div
+      v-if="memoryUsage > maxMemoryUsage && osName === 'windows'"
+      class="mt-1.5"
+    >
+      RAM limit: {{ (maxMemoryUsage / (1024 * 1024 * 1024)).toFixed(2) }}GB (=
+      {{ (availableMemory / (1024 * 1024 * 1024)).toFixed(2) }}GB available - 5%
+      margin * {{ (totalMemory / (1024 * 1024 * 1024)).toFixed() }}GB total)
+    </div>
+    <div
+      v-if="memoryUsage > maxMemoryUsage && osName === 'macos'"
+      class="mt-1.5"
+    >
+      RAM limit: {{ (maxMemoryUsage / (1024 * 1024 * 1024)).toFixed(1) }}GB (=
+      70% * {{ (totalMemory / (1024 * 1024 * 1024)).toFixed() }}GB total)
     </div>
 
     <div class="mt-4">
@@ -240,6 +251,18 @@
         @click="resumeSolver"
       >
         Resume
+      </button>
+    </div>
+
+    <div
+      v-if="memoryUsage > maxMemoryUsage && !store.hasSolverRun"
+      class="mt-6"
+    >
+      <button
+        class="button-base button-red"
+        @click="maxMemoryUsage = Number.POSITIVE_INFINITY"
+      >
+        Ignore RAM Limit (not recommended)
       </button>
     </div>
 
@@ -379,6 +402,7 @@ const isTreeBuilt = ref(false);
 const treeStatus = ref("Module not loaded");
 const memoryUsage = ref(0);
 const memoryUsageCompressed = ref(0);
+const osName = ref<"windows" | "macos" | null>(null);
 const maxMemoryUsage = ref(0);
 const availableMemory = ref(0);
 const totalMemory = ref(0);
@@ -482,11 +506,15 @@ const buildTree = async () => {
   [memoryUsage.value, memoryUsageCompressed.value] =
     await invokes.gameMemoryUsage();
 
+  osName.value = await invokes.osName();
   [availableMemory.value, totalMemory.value] = await invokes.memory();
-  maxMemoryUsage.value = Math.max(
-    Math.floor(availableMemory.value - 0.05 * totalMemory.value),
-    0
-  );
+
+  if (osName.value === "windows") {
+    maxMemoryUsage.value = availableMemory.value - totalMemory.value * 0.05;
+    maxMemoryUsage.value = Math.max(maxMemoryUsage.value, 0);
+  } else if (osName.value === "macos") {
+    maxMemoryUsage.value = totalMemory.value * 0.7;
+  }
 
   if (
     memoryUsage.value > maxMemoryUsage.value &&

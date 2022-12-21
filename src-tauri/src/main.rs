@@ -21,6 +21,7 @@ fn main() {
         .manage(Mutex::new(PostFlopGame::default()))
         .manage(Mutex::new(default_thread_pool()))
         .invoke_handler(tauri::generate_handler![
+            os_name,
             memory,
             range_clear,
             range_update,
@@ -59,6 +60,18 @@ fn main() {
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+}
+
+#[cfg(target_os = "windows")]
+#[tauri::command]
+fn os_name() -> String {
+    "windows".to_string()
+}
+
+#[cfg(target_os = "macos")]
+#[tauri::command]
+fn os_name() -> String {
+    "macos".to_string()
 }
 
 #[tauri::command]
