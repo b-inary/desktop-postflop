@@ -35,7 +35,8 @@ See the [WASM Postflop repository] for more detailed comparisons, including some
   - Intel: Sandy Bridge and later
   - AMD: Zen (1st gen) and later
 
-Though we only distribute Windows builds, we have confirmed that the app can be built and run on macOS.
+Though we only distribute Windows builds, we have confirmed that the app can be built and run on macOS
+(we do not distribute the masOS app because we are not enrolled in the Apple Developer Program and cannot sign the app).
 
 ## Download
 
@@ -44,11 +45,10 @@ You can download the installer (.msi) or the portable executable (.exe) from the
 [GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
 
 - The installer version automatically installs dependent runtimes.
-- To launch the portable version, the WebView2 runtime needs to be installed.
-  - Please download and run the Evergreen Bootstrapper from [Microsoft's website].
-  - Note: WebView2 is pre-installed in Windows 11
+- To launch the portable version, the [WebView2 runtime] needs to be installed.
+  - In most cases, the runtime should already be installed on Windows 10/11.
 
-[Microsoft's website]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
+[WebView2 runtime]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
 
 ## Uninstall
 
@@ -61,6 +61,16 @@ C:\Users\<username>\AppData\Local\b-inary.desktop-postflop
 ## Build
 
 Please see the [Tauri documentation].
+
+Note that the current configuration assumes the use of nightly Rust.
+If you want to use stable Rust, please modify the following line in `src-tauri/Cargo.toml`:
+
+```diff
+[dependencies]
+...
+- postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom-alloc"] }
++ postflop-solver = { git = "https://github.com/b-inary/postflop-solver" }
+```
 
 [Tauri documentation]: https://tauri.app/v1/guides/getting-started/prerequisites
 
