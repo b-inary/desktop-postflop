@@ -119,25 +119,25 @@
         </select>
       </div>
 
-      <!--
       <div
         v-if="displayMode === 'chance'"
         class="flex flex-col items-start justify-center h-full"
       >
-        <div class="text-sm">Display:</div>
+        <div class="text-sm">Chart:</div>
         <select
-          v-model="displayOptions.contentChance"
-          class="w-24 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
+          v-model="displayOptions.chartChance"
+          class="w-40 px-1 py-0.5 border-gray-600 bg-gray-200 rounded-lg shadow cursor-pointer bg-right"
           @change="updateDisplayOptions"
         >
-          <option value="strategy">Strategy</option>
-          <option value="combos">Combos</option>
+          <option value="strategy-combos">Strategy (Combos)</option>
+          <option value="strategy">Strategy (%)</option>
           <option value="eq">Equity</option>
           <option value="ev">EV</option>
           <option value="eqr">EQR</option>
         </select>
       </div>
 
+      <!--
       <div class="flex items-center px-4 gap-4">
         <Tippy content="Copy range text to clipboard">
           <button
@@ -222,14 +222,14 @@ const displayOptions = reactive<Types.DisplayOptions>({
   suit: "grouped",
   strategy: "show",
   contentBasics: "default",
-  // contentChance: "strategy",
+  chartChance: "strategy",
 });
 
 const strategyContentPair = ref("show,default");
 
 const savedDisplayOptions = localStorage.getItem("display-options");
 if (savedDisplayOptions) {
-  const saved = JSON.parse(savedDisplayOptions) as Types.DisplayOptions;
+  const saved: Types.DisplayOptions = JSON.parse(savedDisplayOptions);
   if (Types.barHeightList.includes(saved?.barHeight)) {
     displayOptions.barHeight = saved.barHeight;
   }
@@ -242,9 +242,9 @@ if (savedDisplayOptions) {
   if (Types.contentBasicsList.includes(saved?.contentBasics)) {
     displayOptions.contentBasics = saved.contentBasics;
   }
-  // if (Types.contentChanceList.includes(saved?.contentChance)) {
-  //   displayOptions.contentChance = saved.contentChance;
-  // }
+  if (Types.chartChanceList.includes(saved?.chartChance)) {
+    displayOptions.chartChance = saved.chartChance;
+  }
   strategyContentPair.value = [
     displayOptions.strategy,
     displayOptions.contentBasics,

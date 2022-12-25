@@ -569,7 +569,7 @@ const maxEv = computed(() => {
     return Math.max(...results.ev[playerIndex].map((v) => Math.abs(v)));
   } else {
     const reports = props.chanceReports;
-    if (!reports || reports.status.every((s) => s <= 1.0)) return 0;
+    if (!reports || reports.status.every((s) => s <= 1)) return 0;
     return Math.max(...reports.ev[playerIndex].map((v) => Math.abs(v)));
   }
 });

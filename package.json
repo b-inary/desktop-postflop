@@ -14,9 +14,11 @@
   "dependencies": {
     "@heroicons/vue": "^2.0.13",
     "@tauri-apps/api": "^1.2.0",
+    "chart.js": "^4.1.1",
     "dexie": "^3.2.2",
     "pinia": "^2.0.28",
     "vue": "^3.2.45",
+    "vue-chartjs": "^5.1.0",
     "vue-tippy": "^6.0.0-alpha.65"
   },
   "devDependencies": {

@@ -112,6 +112,7 @@
           :selected-spot="selectedSpot"
           :selected-chance="selectedChance"
           :chance-reports="chanceReports"
+          :display-options="displayOptions"
           :display-player="displayPlayerChance"
           @deal-card="onDealCard"
         />
@@ -213,7 +214,7 @@ const displayOptions = ref<DisplayOptions>({
   suit: "grouped",
   strategy: "show",
   contentBasics: "default",
-  // contentChance: "strategy",
+  chartChance: "strategy-combos",
 });
 
 const copySuccess = ref(0);
