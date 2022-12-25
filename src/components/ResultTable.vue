@@ -135,25 +135,50 @@
 
               <template v-else>
                 <div class="inline-block w-12 text-right">
-                  <template v-if="column.type === 'weight'">
-                    <Adaptive :value="summary[columnIndex(column)]" />
-                  </template>
-                  <template
+                  <span
+                    v-if="column.type === 'weight'"
+                    :data-set="
+                      (strTmp = toFixedAdaptive(summary[columnIndex(column)]))
+                    "
+                  >
+                    <span>{{ strTmp.slice(0, strTmp.indexOf(".") + 1) }}</span>
+                    <span class="text-xs">{{
+                      strTmp.slice(strTmp.indexOf(".") + 1)
+                    }}</span>
+                  </span>
+                  <span
                     v-else-if="
                       column.type === 'percentage' || column.type === 'action'
                     "
+                    :data-set="
+                      (strTmp = toFixed1(summary[columnIndex(column)] * 100))
+                    "
                   >
-                    <Percentage :value="summary[columnIndex(column)]" />
-                  </template>
-                  <template v-else-if="column.type === 'action-ev'">
-                    <Percentage :value="summary[columnIndex(column) - 1]" />
-                  </template>
-                  <template v-else-if="column.type === 'ev'">
-                    <Ev
-                      :value="summary[columnIndex(column)]"
-                      :digits="evDigits"
-                    />
-                  </template>
+                    <span>{{ strTmp.slice(0, -1) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
+                  </span>
+                  <span
+                    v-else-if="column.type === 'action-ev'"
+                    :data-set="
+                      (strTmp = toFixed1(
+                        summary[columnIndex(column) - 1] * 100
+                      ))
+                    "
+                  >
+                    <span>{{ strTmp.slice(0, -1) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
+                  </span>
+                  <span
+                    v-else-if="column.type === 'ev'"
+                    :data-set="
+                      (strTmp = toFixed[evDigits - 1](
+                        summary[columnIndex(column)]
+                      ))
+                    "
+                  >
+                    <span>{{ strTmp.slice(0, -evDigits) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-evDigits) }}</span>
+                  </span>
                 </div>
               </template>
 
@@ -230,27 +255,43 @@
 
               <template v-else>
                 <div class="inline-block w-12 text-right">
-                  <template
+                  <span
                     v-if="tableMode !== 'basics' && column.type === 'weight'"
+                    :data-set="
+                      (strTmp = toFixedAdaptive(item[columnIndex(column)]))
+                    "
                   >
-                    <Adaptive :value="item[columnIndex(column)]" />
-                  </template>
-                  <template
+                    <span>{{ strTmp.slice(0, strTmp.indexOf(".") + 1) }}</span>
+                    <span class="text-xs">{{
+                      strTmp.slice(strTmp.indexOf(".") + 1)
+                    }}</span>
+                  </span>
+                  <span
                     v-else-if="
                       column.type === 'weight' ||
                       column.type === 'percentage' ||
                       column.type === 'action'
                     "
+                    :data-set="
+                      (strTmp = toFixed1(item[columnIndex(column)] * 100))
+                    "
                   >
-                    <Percentage :value="item[columnIndex(column)]" />
-                  </template>
-                  <template
+                    <span>{{ strTmp.slice(0, -1) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-1) }}%</span>
+                  </span>
+                  <span
                     v-else-if="
                       column.type === 'ev' || column.type === 'action-ev'
                     "
+                    :data-set="
+                      (strTmp = toFixed[evDigits - 1](
+                        item[columnIndex(column)]
+                      ))
+                    "
                   >
-                    <Ev :value="item[columnIndex(column)]" :digits="evDigits" />
-                  </template>
+                    <span>{{ strTmp.slice(0, -evDigits) }}</span>
+                    <span class="text-xs">{{ strTmp.slice(-evDigits) }}</span>
+                  </span>
                 </div>
               </template>
 
@@ -301,7 +342,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, reactive, ref, toRefs, watch } from "vue";
+import { computed, reactive, ref, toRefs, watch } from "vue";
 
 import {
   ranks,
@@ -423,30 +464,6 @@ const cardStr = (card: number) => {
   const rank = ranks[card >>> 2];
   const suit = suits[card & 3];
   return rank + suit;
-};
-
-const Adaptive = (props: { value: number }) => {
-  const split = computed(() => toFixedAdaptive(props.value).split("."));
-  return h("span", {}, [
-    h("span", {}, split.value[0] + "."),
-    h("span", { class: "text-xs" }, split.value[1]),
-  ]);
-};
-
-const Percentage = (props: { value: number }) => {
-  const str = computed(() => toFixed1(props.value * 100));
-  return h("span", {}, [
-    h("span", {}, str.value.slice(0, -1)),
-    h("span", { class: "text-xs" }, str.value.slice(-1) + "%"),
-  ]);
-};
-
-const Ev = (props: { value: number; digits: number }) => {
-  const str = computed(() => toFixed[props.digits - 1](props.value));
-  return h("span", {}, [
-    h("span", {}, str.value.slice(0, -props.digits)),
-    h("span", { class: "text-xs" }, str.value.slice(-props.digits)),
-  ]);
 };
 
 interface Props {
@@ -983,6 +1000,9 @@ const exportSummary = async () => {
     await writeTextFile(filePath, data.join("\n"));
   }
 };
+
+/* eslint-disable prefer-const */
+let strTmp = "";
 </script>
 
 <style scoped>
