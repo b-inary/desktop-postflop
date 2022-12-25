@@ -6,7 +6,7 @@
       <div class="flex items-center z-10">
         <div class="px-4">
           <span class="text-lg font-semibold">Desktop Postflop</span>
-          <span class="pl-2 font-semibold text-gray-400">v0.2.0-alpha.1</span>
+          <span class="pl-2 font-semibold text-gray-400">v0.2.0</span>
         </div>
       </div>
 
