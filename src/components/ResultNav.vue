@@ -666,7 +666,7 @@ const spliceSpotsChance = async (spotIndex: number) => {
   }
 
   let possibleCards = 0n;
-  if (turnSpot?.selectedIndex !== -1) {
+  if (!(turnSpot?.type === "chance" && turnSpot.selectedIndex === -1)) {
     possibleCards = await invokes.gamePossibleCards(append);
   }
 
