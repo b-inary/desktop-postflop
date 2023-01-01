@@ -21,8 +21,8 @@ However, if you want to use the solver for more serious purposes, please conside
   - Faster computation
   - Able to use more than 4GB of memory
 - **Disadvantages**:
-  - Distributes only Windows builds
   - Needs to download the program and trust the execution
+  - macOS builds are not distributed (you need to build the app yourself)
 
 See the [WASM Postflop repository] for more detailed comparisons, including some commercial solvers.
 
@@ -30,29 +30,36 @@ See the [WASM Postflop repository] for more detailed comparisons, including some
 
 ## Supported environments
 
-- OS: Windows 10/11
-- CPU: must support AVX instructions
-  - Intel: Sandy Bridge and later
-  - AMD: Zen (1st gen) and later
-
-Though we only distribute Windows builds, we have confirmed that the app can be built and run on macOS
-(we do not distribute the masOS app because we are not enrolled in the Apple Developer Program and cannot sign the app).
+- OS
+  - Windows: 10/11
+  - macOS: 11.7 and later
+    - We do not distribute macOS builds because we are not enrolled in the Apple Developer Program and cannot sign the app.
+  - Linux: glibc 2.31 and later (e.g., Ubuntu 20.04 and later)
+- CPU
+  - x86-64: must support AVX instructions
+    - Intel: Sandy Bridge and later
+    - AMD: Zen (1st gen) and later
+  - Apple silicon: M1 and later
 
 ## Download
 
-You can download the installer (.msi) or the portable executable (.exe) from the [GitHub releases page].
+You can download the app from the [GitHub releases page].
 
 [GitHub releases page]: https://github.com/b-inary/desktop-postflop/releases
 
-- The installer version automatically installs dependent runtimes.
-- To launch the portable version, the [WebView2 runtime] needs to be installed.
-  - In most cases, the runtime should already be installed on Windows 10/11.
+- Windows
+  - The installer version (.msi) automatically installs dependent runtimes.
+  - The portable version (.exe) requires the [WebView2 runtime] to be installed.
+    - In most cases, the runtime should already be installed on Windows 10/11.
+- Linux
+  - AppImage should work on most Linux distributions.
+  - Alternatively, the .deb package is available for Debian-based distributions, including Ubuntu.
 
 [WebView2 runtime]: https://developer.microsoft.com/en-us/microsoft-edge/webview2/#download-section
 
 ## Uninstall
 
-To completely uninstall Desktop Postflop, please remove the following folder after the regular uninstallation:
+On Windows, please remove the following folder after the regular uninstallation to completely uninstall Desktop Postflop:
 
 ```
 C:\Users\<username>\AppData\Local\b-inary.desktop-postflop
