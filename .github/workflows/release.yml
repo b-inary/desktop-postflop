@@ -7,7 +7,11 @@ on:
 
 jobs:
   release:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        platform: [windows-latest, ubuntu-20.04]
+    runs-on: ${{ matrix.platform }}
 
     steps:
       - name: Checkout repository
@@ -25,16 +29,37 @@ jobs:
           components: rust-src
           default: true
 
+      - name: Install dependencies (Linux)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libgtk-3-dev libwebkit2gtk-4.0-dev librsvg2-dev
+
       - name: Install app dependencies
         run: npm ci
 
-      - name: Build the app
+      - name: Build the app (Windows)
+        if: matrix.platform == 'windows-latest'
         run: npm run tauri build -- --target x86_64-pc-windows-msvc -- -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
 
-      - name: Upload artifacts
+      - name: Build the app (Linux)
+        if: matrix.platform == 'ubuntu-20.04'
+        run: npm run tauri build -- --target x86_64-unknown-linux-gnu -- -Z build-std=std,panic_abort -Z build-std-features=panic_immediate_abort
+
+      - name: Upload artifacts (Windows)
+        if: matrix.platform == 'windows-latest'
         uses: softprops/action-gh-release@v1
         with:
           draft: true
           files: |
             src-tauri/target/x86_64-pc-windows-msvc/release/Desktop Postflop.exe
             src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/Desktop Postflop_*_x64_en-US.msi
+
+      - name: Upload artifacts (Linux)
+        if: matrix.platform == 'ubuntu-20.04'
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          files: |
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/deb/desktop-postflop_*_amd64.deb
+            src-tauri/target/x86_64-unknown-linux-gnu/release/bundle/appimage/desktop-postflop_*_amd64.AppImage

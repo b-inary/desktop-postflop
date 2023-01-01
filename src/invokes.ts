@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api";
 import { Results, ChanceReports } from "./result-types";
 
-export const osName = async (): Promise<"windows" | "macos"> => {
+export const osName = async (): Promise<"windows" | "macos" | "linux"> => {
   return await invoke("os_name");
 };
 

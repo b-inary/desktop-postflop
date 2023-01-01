@@ -74,6 +74,12 @@ fn os_name() -> String {
     "macos".to_string()
 }
 
+#[cfg(target_os = "linux")]
+#[tauri::command]
+fn os_name() -> String {
+    "linux".to_string()
+}
+
 #[tauri::command]
 fn memory() -> (u64, u64) {
     let mut system = System::new_all();

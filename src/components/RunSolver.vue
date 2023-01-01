@@ -402,7 +402,7 @@ const isTreeBuilt = ref(false);
 const treeStatus = ref("Module not loaded");
 const memoryUsage = ref(0);
 const memoryUsageCompressed = ref(0);
-const osName = ref<"windows" | "macos" | null>(null);
+const osName = ref<Awaited<ReturnType<typeof invokes.osName>> | null>(null);
 const maxMemoryUsage = ref(0);
 const availableMemory = ref(0);
 const totalMemory = ref(0);
@@ -509,11 +509,12 @@ const buildTree = async () => {
   osName.value = await invokes.osName();
   [availableMemory.value, totalMemory.value] = await invokes.memory();
 
-  if (osName.value === "windows") {
+  if (osName.value === "macos") {
+    // available memory is not useful on macOS
+    maxMemoryUsage.value = totalMemory.value * 0.7;
+  } else {
     maxMemoryUsage.value = availableMemory.value - totalMemory.value * 0.05;
     maxMemoryUsage.value = Math.max(maxMemoryUsage.value, 0);
-  } else if (osName.value === "macos") {
-    maxMemoryUsage.value = totalMemory.value * 0.7;
   }
 
   if (
