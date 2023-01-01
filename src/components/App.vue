@@ -80,8 +80,11 @@ const header = computed(
     }[store.sideView])
 );
 
-const clientHeight = ref(document.documentElement.clientHeight - 0.01);
-window.addEventListener("resize", () => {
+const clientHeight = ref(0);
+const updateClientHeight = () => {
   clientHeight.value = document.documentElement.clientHeight - 0.01;
-});
+};
+
+updateClientHeight();
+window.addEventListener("resize", updateClientHeight);
 </script>
