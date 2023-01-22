@@ -42,7 +42,7 @@
     />
 
     <div
-      v-if="store.navView === 'results' && selectedSpot"
+      v-if="store.navView === 'results' && selectedSpot && results"
       class="flex flex-grow min-h-0"
     >
       <template v-if="displayMode === 'basics'">
@@ -66,9 +66,20 @@
           :cards="cards"
           :selected-spot="selectedSpot"
           :results="results"
-          :chance-reports="null"
           :display-player="displayPlayerBasics"
           :hover-content="basicsHoverContent"
+        />
+      </template>
+
+      <template v-else-if="displayMode === 'graphs'">
+        <ResultGraphs
+          :cards="cards"
+          :selected-spot="selectedSpot"
+          :selected-chance="selectedChance"
+          :results="results"
+          :chance-reports="chanceReports"
+          :display-options="displayOptions"
+          :display-player="displayPlayerBasics"
         />
       </template>
 
@@ -123,7 +134,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useStore, useSavedConfigStore } from "../store";
+import { useStore } from "../store";
 import * as invokes from "../invokes";
 
 import {
@@ -142,10 +153,10 @@ import ResultMiddle from "./ResultMiddle.vue";
 import ResultBasics from "./ResultBasics.vue";
 import ResultTable from "./ResultTable.vue";
 import ResultCompare from "./ResultCompare.vue";
+import ResultGraphs from "./ResultGraphs.vue";
 import ResultChance from "./ResultChance.vue";
 
 const store = useStore();
-const config = useSavedConfigStore();
 
 /* Navigation */
 
@@ -157,7 +168,7 @@ const dealtCard = ref(-1);
 
 const selectedSpot = ref<Spot | null>(null);
 const selectedChance = ref<SpotChance | null>(null);
-const currentBoard = ref([...config.board]);
+const currentBoard = ref<number[]>([]);
 const results = ref<Results | null>(null);
 const chanceReports = ref<ChanceReports | null>(null);
 const totalBetAmount = ref([0, 0]);
@@ -180,6 +191,10 @@ const init = async () => {
 
 const clear = () => {
   cards.value = [[], []];
+  selectedSpot.value = null;
+  selectedChance.value = null;
+  results.value = null;
+  chanceReports.value = null;
 };
 
 const onUpdateSpot = (
@@ -214,6 +229,7 @@ const displayOptions = ref<DisplayOptions>({
   suit: "grouped",
   strategy: "show",
   contentBasics: "default",
+  contentGraphs: "eq",
   chartChance: "strategy-combos",
 });
 

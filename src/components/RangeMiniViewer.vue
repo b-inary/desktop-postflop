@@ -15,7 +15,7 @@
           <div
             class="absolute w-full h-full left-0 top-0 bg-bottom bg-no-repeat"
             :style="{
-              'background-image': `linear-gradient(${amber500} 0% 100%)`,
+              'background-image': `linear-gradient(${yellow500} 0% 100%)`,
               'background-size': `100% ${cellValue(row, col)}%`,
             }"
           ></div>
@@ -28,7 +28,7 @@
 <script setup lang="ts">
 import { useConfigStore } from "../store";
 
-const amber500 = "#f59e0b";
+const yellow500 = "#eab308";
 
 const props = defineProps<{ player: number }>();
 const config = useConfigStore();

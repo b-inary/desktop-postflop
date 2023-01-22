@@ -53,12 +53,13 @@
               max-width: calc(100% - 0.25rem);
               font-size: var(--value-font-size);
             "
+            :data-set="(strTmp = cellValueText[cellIndex(row, col)])"
           >
-            {{ cellValueText[cellIndex(row, col)].split(".")[0]
-            }}<span v-if="cellValueText[cellIndex(row, col)].includes('.')"
-              >.<span style="font-size: 85%">
-                {{ cellValueText[cellIndex(row, col)].split(".")[1] }}</span
-              ></span
+            {{ strTmp.split(".")[0]
+            }}<span v-if="strTmp.includes('.')"
+              >.<span style="font-size: 85%">{{
+                strTmp.split(".")[1]
+              }}</span></span
             >
           </div>
         </td>
@@ -87,7 +88,7 @@ import {
   HoverContent,
 } from "../result-types";
 
-const amber500 = "#f59e0b";
+const yellow500 = "#eab308";
 const colorGradient = [
   { red: 0xef, green: 0x44, blue: 0x44 }, // red-500
   { red: 0xf9, green: 0x73, blue: 0x16 }, // orange-500
@@ -139,7 +140,7 @@ const props = defineProps<{
   selectedSpot: Spot;
   selectedChance: SpotChance | null;
   currentBoard: number[];
-  results: Results | null;
+  results: Results;
   totalBetAmount: number[];
   displayOptions: DisplayOptions;
   displayPlayer: "oop" | "ip";
@@ -156,7 +157,7 @@ const clickedCellIndex = ref(-1);
 
 const evDigits = computed(() => {
   const results = props.results;
-  if (!results || results.isEmpty) return 1;
+  if (results.isEmpty) return 3;
   const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
   const maxEv = Math.max(...results.ev[playerIndex]);
   return maxEv < 9.9995 ? 3 : maxEv < 99.995 ? 2 : 1;
@@ -171,7 +172,6 @@ const numActions = computed(() => {
     (props.displayOptions.strategy === "show" &&
       props.displayPlayer === props.selectedSpot.player &&
       !props.selectedChance &&
-      props.results &&
       props.results.numActions) ||
     0
   );
@@ -179,8 +179,6 @@ const numActions = computed(() => {
 
 const cellData = computed(() => {
   const results = props.results;
-  if (!results) return null;
-
   const options = props.displayOptions;
   const player = props.displayPlayer;
 
@@ -210,7 +208,7 @@ const cellData = computed(() => {
   for (let i = 0; i < cardsLength; ++i) {
     const weight = results.weights[playerIndex][i];
     const normalizer = results.normalizer[playerIndex][i];
-    if (weight < 0.0005 || normalizer === 0) continue;
+    if (weight === 0 || normalizer === 0) continue;
 
     const pair = props.cards[playerIndex][i];
     const card1 = pair & 0xff;
@@ -239,7 +237,7 @@ const cellData = computed(() => {
 
   for (const cell of data) {
     const hasWeight = cell.some((suit) => suit.weight > 0);
-    if (!hasWeight) cell.splice(0);
+    if (!hasWeight) cell.length = 0;
   }
 
   return data;
@@ -275,8 +273,6 @@ const cellDenominator = computed(() => {
 });
 
 const maxWeight = computed(() => {
-  if (!cellData.value) return 0;
-
   let ret = 0;
   cellData.value.forEach((cell, i) => {
     const denominator = cell.length > 1 ? 1 : cellDenominator.value[i];
@@ -291,14 +287,13 @@ const maxWeight = computed(() => {
 
 const cellContent = computed(() => {
   const results = props.results;
-  if (!cellData.value || !results) return null;
-
   const options = props.displayOptions;
-  const barHeight = options.barHeight;
-  const isSuitIndividual = options.suit === "individual";
   const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
+
   const isEmpty = results.isEmpty;
   const eqrBase = results.eqrBase[playerIndex];
+  const barHeight = options.barHeight;
+  const isSuitIndividual = options.suit === "individual";
 
   let lowest = 0;
   let middle = 0;
@@ -343,7 +338,7 @@ const cellContent = computed(() => {
       if (numActions.value === 0) {
         let color;
         if (isEmpty || options.contentBasics === "default") {
-          color = amber500;
+          color = yellow500;
         } else {
           let value: number;
           if (options.contentBasics === "eq") {
@@ -364,29 +359,16 @@ const cellContent = computed(() => {
       const spot = props.selectedSpot as SpotPlayer;
       const colors = spot.actions.map((action) => action.color);
 
-      let bgImage, bgSize;
-      if (!isSuitIndividual) {
-        bgImage = "";
-        bgSize = "";
-        let prevPos = 0;
-        for (let i = suit.strategy.length - 1; i >= 0; --i) {
-          const pos = prevPos + suit.strategy[i] / normalizer;
-          bgImage += `linear-gradient(${colors[i]} 0% 100%)`;
-          bgSize += `${pos * 100}% ${height * 100}%`;
-          if (i > 0) (bgImage += ", "), (bgSize += ", ");
-          prevPos = pos;
-        }
-      } else {
-        bgImage = "linear-gradient(to top";
-        bgSize = `100% ${height * 100}%`;
-        let prevPos = 0;
-        for (let i = suit.strategy.length - 1; i >= 0; --i) {
-          const pos = prevPos + suit.strategy[i] / normalizer;
-          bgImage += `, ${colors[i]} ${prevPos * 100}% ${pos * 100}%`;
-          prevPos = pos;
-        }
-        bgImage += ")";
+      let bgImage = `linear-gradient(to ${isSuitIndividual ? "top" : "right"}`;
+      const bgSize = `100% ${height * 100}%`;
+
+      let prevPos = 0;
+      for (let i = suit.strategy.length - 1; i >= 0; --i) {
+        const pos = prevPos + suit.strategy[i] / normalizer;
+        bgImage += `, ${colors[i]} ${prevPos * 100}% ${pos * 100}%`;
+        prevPos = pos;
       }
+      bgImage += ")";
 
       return { bgImage, bgSize };
     });
@@ -398,12 +380,10 @@ const cellIndex = (row: number, col: number) => {
 };
 
 const columns = (row: number, col: number) => {
-  if (!cellContent.value) return null;
   return cellContent.value[cellIndex(row, col)];
 };
 
 const hasWeight = (row: number, col: number) => {
-  if (!cellData.value) return false;
   return cellData.value[cellIndex(row, col)].length > 0;
 };
 
@@ -415,10 +395,7 @@ const cellText = (row: number, col: number) => {
 
 const cellValueText = computed(() => {
   return Array.from({ length: 13 * 13 }, (_, index) => {
-    if (!props.results || !cellData.value) return "";
-
     const displayOptions = props.displayOptions;
-
     if (
       displayOptions.strategy === "show" &&
       displayOptions.contentBasics === "default"
@@ -457,7 +434,9 @@ const cellValueText = computed(() => {
     if (displayOptions.contentBasics !== "default" && props.results.isEmpty) {
       return "-";
     } else if (displayOptions.contentBasics === "ev") {
-      return value >= 999.95 ? value.toFixed(0) : toFixedEv.value(value);
+      return Math.abs(value) >= 999.95
+        ? value.toFixed(0)
+        : toFixedEv.value(value);
     } else {
       return toFixed1(value * 100);
     }
@@ -502,6 +481,9 @@ onUnmounted(() => {
   if (props.isCompareMode || clickedCellIndex.value === -1) return;
   emit("update-hover-content", null);
 });
+
+/* eslint-disable prefer-const */
+let strTmp = "";
 </script>
 
 <style scoped>

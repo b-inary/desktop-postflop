@@ -155,7 +155,7 @@ const BarChart = (props: { values: number[] }) => {
 const props = defineProps<{
   selectedSpot: Spot;
   selectedChance: SpotChance | null;
-  results: Results | null;
+  results: Results;
 }>();
 
 const player = computed(() => {
@@ -165,7 +165,6 @@ const player = computed(() => {
 
 const combos = computed(() => {
   const results = props.results;
-  if (!results) return [0, 0];
 
   const ret: number[] = [];
   for (let i = 0; i < 2; ++i) {
@@ -174,8 +173,7 @@ const combos = computed(() => {
     for (let j = 0; j < n; ++j) {
       const weight = results.weights[i][j];
       const normalizer = results.normalizer[i][j];
-      if (weight < 0.0005 || normalizer === 0) continue;
-      sum += weight;
+      sum += normalizer && weight;
     }
     ret.push(sum);
   }
@@ -185,7 +183,7 @@ const combos = computed(() => {
 
 const equity = computed(() => {
   const results = props.results;
-  if (!results || results.isEmpty) return [Number.NaN, Number.NaN];
+  if (results.isEmpty) return [Number.NaN, Number.NaN];
   return [
     average(results.equity[0], results.normalizer[0]),
     average(results.equity[1], results.normalizer[1]),
@@ -194,7 +192,7 @@ const equity = computed(() => {
 
 const ev = computed(() => {
   const results = props.results;
-  if (!results || results.isEmpty) return [Number.NaN, Number.NaN];
+  if (results.isEmpty) return [Number.NaN, Number.NaN];
   return [
     average(results.ev[0], results.normalizer[0]),
     average(results.ev[1], results.normalizer[1]),
@@ -203,7 +201,7 @@ const ev = computed(() => {
 
 const eqr = computed(() => {
   const results = props.results;
-  if (!results || results.isEmpty) return [Number.NaN, Number.NaN];
+  if (results.isEmpty) return [Number.NaN, Number.NaN];
   const ret = [
     ev.value[0] / (results.eqrBase[0] * equity.value[0]),
     ev.value[1] / (results.eqrBase[1] * equity.value[1]),
@@ -215,7 +213,7 @@ const eqr = computed(() => {
 
 const evDigits = computed(() => {
   const results = props.results;
-  if (!results || results.isEmpty) return 3;
+  if (results.isEmpty) return 3;
   const maxEv = Math.max(...ev.value.map((x) => Math.abs(x)));
   return maxEv < 9.9995 ? 3 : maxEv < 99.995 ? 2 : 1;
 });

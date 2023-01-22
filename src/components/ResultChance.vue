@@ -9,7 +9,7 @@
         :key="suit"
         class="flex shrink-0 w-full justify-center gap-[1%]"
       >
-        <div class="w-12"></div>
+        <div class="w-[3.25rem]"></div>
         <BoardSelectorCard
           v-for="rank in 13"
           :key="rank"
@@ -26,8 +26,8 @@
 
       <div
         ref="chartParentDiv"
-        class="relative flex-grow max-h-[50%] my-2"
-        style="width: calc(84.5% + 3rem)"
+        class="relative flex-grow max-h-[50%] my-1.5"
+        style="width: calc(84.5% + 3.25rem)"
       >
         <div
           v-if="chanceReports && chartParentDivHeight >= 180"
@@ -42,18 +42,16 @@
       style="flex: 3"
       table-mode="chance"
       :chance-type="selectedChance.player"
-      :cards="null"
       :selected-spot="selectedSpot"
-      :results="null"
       :chance-reports="chanceReports"
       :display-player="displayPlayer"
-      :hover-content="null"
     />
   </div>
 </template>
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
+import { ranks, suits, toFixed1, toFixedAdaptive } from "../utils";
 import {
   ChanceReports,
   Spot,
@@ -61,7 +59,6 @@ import {
   SpotPlayer,
   DisplayOptions,
 } from "../result-types";
-import { ranks, suits, toFixed1, toFixedAdaptive } from "../utils";
 
 import {
   Chart,
@@ -87,6 +84,10 @@ Chart.register(
   Title,
   Tooltip
 );
+
+Chart.defaults.font.size = 14;
+Chart.defaults.font.family =
+  "system-ui, 'Noto Sans', 'Open Sans', Roboto, sans-serif";
 
 const labels = [...ranks].reverse();
 
@@ -127,7 +128,7 @@ const chartData = computed((): ChartData<"bar", number[]> | null => {
   const options = props.displayOptions;
   const playerIndex = props.displayPlayer === "oop" ? 0 : 1;
 
-  let datasets: ChartData<"bar", number[]>["datasets"] = [];
+  let datasets: ChartData<"bar", number[]>["datasets"];
   const stacks = ["clubs", "diamonds", "hearts", "spades"];
   const defaultData = { barPercentage: 0.85, categoryPercentage: 0.75 };
 
@@ -195,21 +196,24 @@ const chartOptions = computed((): ChartOptions<"bar"> => {
   const style = ["strategy", "eq", "eqr"].includes(option)
     ? "percent"
     : "decimal";
-  const format = { style, minimumFractionDigits: 0 };
+  const format = { style, useGrouping: false, minimumFractionDigits: 0 };
 
   const titleText =
+    props.displayPlayer.toUpperCase() +
+    " " +
     {
       "strategy-combos": "Strategy (Combos)",
       strategy: "Strategy",
       eq: "Equity",
       ev: "EV",
       eqr: "EQR",
-    }[option] + ` (${props.displayPlayer.toUpperCase()})`;
+    }[option];
 
   return {
     responsive: true,
     maintainAspectRatio: false,
     animation: false,
+    normalized: true,
     scales: {
       y: {
         stacked: true,
@@ -217,7 +221,7 @@ const chartOptions = computed((): ChartOptions<"bar"> => {
         max: option === "strategy" ? 1 : undefined,
         ticks: { format },
         afterFit(axis) {
-          axis.width = 48;
+          axis.width = 52;
         },
       },
     },
@@ -225,19 +229,14 @@ const chartOptions = computed((): ChartOptions<"bar"> => {
       title: {
         display: true,
         text: titleText,
-        font: { size: 14, weight: "normal" },
+        font: { size: 16, weight: "normal" },
         color: "rgba(0, 0, 0, 0.9)",
+      },
+      legend: {
+        display: false,
       },
       tooltip: {
         titleMarginBottom: 4,
-        titleFont: {
-          size: 14,
-          family: "ui-sans-serif, system-ui",
-        },
-        bodyFont: {
-          size: 14,
-          family: "ui-sans-serif, system-ui",
-        },
         callbacks: {
           title(context) {
             const rank = 12 - context[0].dataIndex;
