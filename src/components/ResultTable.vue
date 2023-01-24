@@ -37,17 +37,15 @@
         </div>
 
         <Tippy content="Export summary to CSV file">
-          <a
-            ref="exportSummaryButton"
+          <button
             :class="
               'flex w-8 h-8 items-center justify-center border border-gray-600 bg-gray-200 ' +
-              'rounded-lg shadow cursor-pointer transition-colors active:bg-gray-300'
+              'rounded-lg shadow transition-colors active:bg-gray-300'
             "
-            download="summary.csv"
             @click="exportSummary"
           >
             <ArrowTopRightOnSquareIcon class="w-5 h-5" />
-          </a>
+          </button>
         </Tippy>
       </div>
     </div>
@@ -959,11 +957,7 @@ const actionBarBg = (index: number, row: number[]) => {
   }%, ${neutral800} ${value * 100}% 100%)`;
 };
 
-const exportSummaryButton = ref<HTMLAnchorElement | null>(null);
-
 const exportSummary = async () => {
-  if (!exportSummaryButton.value) return;
-
   const data: string[] = [];
 
   if (props.tableMode !== "chance") {
@@ -1036,6 +1030,7 @@ const exportSummary = async () => {
     defaultPath: "summary.csv",
     filters: [{ name: "CSV Files", extensions: ["csv"] }],
   });
+
   if (filePath) {
     await writeTextFile(filePath, data.join("\n"));
   }

@@ -107,7 +107,7 @@ pub fn tree_new(
     merging_threshold: f64,
     added_lines: String,
     removed_lines: String,
-) {
+) -> bool {
     let initial_state = match board_len {
         len if len <= 3 => BoardState::Flop,
         4 => BoardState::Turn,
@@ -155,7 +155,9 @@ pub fn tree_new(
                 .split(&['-', '|'][..])
                 .map(decode_action)
                 .collect::<Vec<_>>();
-            tree.add_line(&line).unwrap();
+            if tree.add_line(&line).is_err() {
+                return false;
+            }
         }
     }
 
@@ -165,11 +167,14 @@ pub fn tree_new(
                 .split(&['-', '|'][..])
                 .map(decode_action)
                 .collect::<Vec<_>>();
-            tree.remove_line(&line).unwrap();
+            if tree.remove_line(&line).is_err() {
+                return false;
+            }
         }
     }
 
     *tree_state.lock().unwrap() = tree;
+    true
 }
 
 #[tauri::command]

@@ -1,7 +1,14 @@
 <template>
+  <!-- Error -->
+
+  <div v-if="isTreeError">
+    Error: Failed to build tree (loaded broken tree?)
+  </div>
+
   <!-- Navigation -->
 
   <div
+    v-if="!isTreeError"
     ref="navDiv"
     class="flex h-[10.5rem] gap-1 p-1 overflow-x-auto whitespace-nowrap snug"
   >
@@ -114,7 +121,7 @@
   <!-- Invalid lines error -->
 
   <div
-    v-if="invalidLinesArray.length > 0"
+    v-if="!isTreeError && invalidLinesArray.length > 0"
     class="flex mt-4 font-semibold text-red-500"
   >
     <div class="underline">
@@ -127,13 +134,13 @@
     </div>
   </div>
 
-  <div class="flex mx-6 my-6 justify-center">
+  <div v-if="!isTreeError" class="flex mx-6 my-6 justify-center">
     <hr class="border-gray-400 w-full" />
   </div>
 
   <!-- Edit -->
 
-  <div class="flex gap-3">
+  <div v-if="!isTreeError" class="flex gap-3">
     <button
       class="button-base button-blue"
       :disabled="
@@ -187,7 +194,7 @@
   <div class="flex my-6 gap-3">
     <button
       class="button-base button-blue"
-      :disabled="invalidLinesArray.length > 0"
+      :disabled="isTreeError || invalidLinesArray.length > 0"
       @click="saveEdit"
     >
       Save Edit
@@ -200,7 +207,12 @@
 
   <!-- Lines -->
 
-  <div v-if="addedLinesArray.length > 0 || removedLinesArray.length > 0">
+  <div
+    v-if="
+      !isTreeError &&
+      (addedLinesArray.length > 0 || removedLinesArray.length > 0)
+    "
+  >
     <div v-if="addedLinesArray.length > 0" class="flex">
       <div class="font-semibold underline w-[7.75rem]">
         Added line{{ addedLinesArray.length > 1 ? "s" : "" }}:
@@ -261,7 +273,7 @@ let isLocked = false;
 
 const boardLength = config.expectedBoardLength;
 
-await invokes.treeNew(
+const isTreeError = !(await invokes.treeNew(
   boardLength,
   config.startingPot,
   config.effectiveStack,
@@ -285,7 +297,7 @@ await invokes.treeNew(
   config.mergingThreshold / 100,
   config.addedLines,
   config.removedLines
-);
+));
 
 const rootSpot: SpotRoot = {
   type: "root",

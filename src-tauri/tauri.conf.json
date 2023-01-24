@@ -12,8 +12,8 @@
   },
   "tauri": {
     "allowlist": {
-      "dialog": { "save": true },
-      "fs": { "writeFile": true },
+      "dialog": { "open": true, "save": true },
+      "fs": { "readFile": true, "writeFile": true },
       "shell": { "open": "^https://github.com/" }
     },
     "bundle": {

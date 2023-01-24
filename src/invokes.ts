@@ -69,8 +69,8 @@ export const treeNew = async (
   mergingThreshold: number,
   addedLines: string,
   removedLines: string
-) => {
-  await invoke("tree_new", {
+): Promise<boolean> => {
+  return await invoke("tree_new", {
     boardLen,
     startingPot,
     effectiveStack,
