@@ -67,10 +67,23 @@ C:\Users\<username>\AppData\Local\b-inary.desktop-postflop
 
 ## Build
 
-Please see the [Tauri documentation].
+[Rust] and [Node.js] need to be installed to build.
+On Linux, you will also need to install some dependencies; please see the [Tauri documentation] for details.
+For better performance, we also recommend installing the Rust nightly channel:
 
-Note that the current configuration assumes the use of nightly Rust.
-If you want to use stable Rust, please modify the following line in `src-tauri/Cargo.toml`:
+```sh
+$ rustup install nightly
+$ rustup default nightly
+```
+
+Then clone this reporitory and run the following commands:
+
+```sh
+$ npm install
+$ npm run tauri build
+```
+
+If you want to use stable Rust instead of nightly Rust, please modify the following line in `src-tauri/Cargo.toml` (performance will be sacrificed):
 
 ```diff
 [dependencies]
@@ -79,7 +92,9 @@ If you want to use stable Rust, please modify the following line in `src-tauri/C
 + postflop-solver = { git = "https://github.com/b-inary/postflop-solver" }
 ```
 
-[Tauri documentation]: https://tauri.app/v1/guides/getting-started/prerequisites
+[Rust]: https://www.rust-lang.org/learn/get-started
+[Node.js]: https://nodejs.org/en/
+[Tauri documentation]: https://tauri.app/v1/guides/getting-started/prerequisites/#setting-up-linux
 
 ## License
 
