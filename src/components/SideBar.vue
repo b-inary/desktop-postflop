@@ -21,9 +21,11 @@
       Board
       <span class="flex mt-1 justify-center font-semibold">
         <span
-          v-for="item in boardTexts"
-          :key="item.rank + item.suit"
-          :class="'inline-block mx-0.5 ' + item.colorClass"
+          v-for="(item, i) in boardTexts"
+          :key="i"
+          :class="
+            'inline-block ' + (i === 3 ? 'mx-1 ' : 'mx-0.5 ') + item.colorClass
+          "
         >
           {{ item.rank + item.suit }}
         </span>
@@ -35,6 +37,10 @@
       @click="store.sideView = 'tree-config'"
     >
       Tree Configuration
+    </button>
+
+    <button :class="itemStyle('bunching')" @click="store.sideView = 'bunching'">
+      Bunching Effect
     </button>
 
     <button
@@ -77,7 +83,7 @@ const boardTexts = computed(() => {
 
 <style scoped>
 .side-bar-item {
-  @apply block mx-2 my-1 px-4 py-3 rounded-3xl;
+  @apply block mx-2 my-[0.1875rem] px-4 py-2.5 rounded-3xl;
   @apply text-left text-[1.0625rem] select-none;
   @apply transition-colors hover:bg-blue-100;
 }

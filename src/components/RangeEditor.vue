@@ -52,14 +52,22 @@
             v-model="rangeText"
             type="text"
             :class="
-              'flex-grow px-2 py-1 rounded-lg text-sm ' +
+              'flex-grow mr-6 px-2 py-1 rounded-lg text-sm ' +
               (rangeTextError ? 'input-error' : '')
             "
             @focus="($event.target as HTMLInputElement).select()"
             @change="onRangeTextChange"
           />
 
-          <button class="ml-6 button-base button-blue" @click="clearRange">
+          <button
+            v-if="player >= 2"
+            class="mr-4 button-base button-blue"
+            @click="invertRange"
+          >
+            Invert
+          </button>
+
+          <button class="button-base button-blue" @click="clearRange">
             Clear
           </button>
         </div>
@@ -104,41 +112,52 @@
       </div>
     </div>
 
-    <DbItemPicker
-      class="ml-6"
-      store-name="ranges"
-      :index="player"
-      :value="rangeText"
-      :allow-save="rangeText !== '' && rangeTextError === ''"
-      @load-item="loadRange"
-    />
+    <div class="flex-grow max-w-[18rem] ml-6">
+      <DbItemPicker
+        store-name="ranges"
+        :index="player"
+        :value="rangeText"
+        :allow-save="rangeText !== '' && rangeTextError === ''"
+        :hide-import-export="player >= 2"
+        @load-item="loadRange"
+      />
+
+      <div v-if="player >= 2" class="flex mt-12 justify-center gap-4">
+        <button class="button-base button-blue !px-5" @click="emit('save')">
+          Save Edit
+        </button>
+        <button class="button-base button-red !px-5" @click="emit('cancel')">
+          Cancel Edit
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
-import { useConfigStore } from "../store";
-import { ranks } from "../utils";
+import { useStore } from "../store";
+import { ranks, trimRegex, rangeRegex } from "../utils";
 import * as invokes from "../invokes";
 
 import DbItemPicker from "./DbItemPicker.vue";
 
 const yellow500 = "#eab308";
 
-const rankPat = "[AaKkQqJjTt2-9]";
-const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
-const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
-const trimRegex = /\s*([-:,])\s*/g;
-const rangeRegex = new RegExp(
-  `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
-);
-
 type DraggingMode = "none" | "enabling" | "disabling";
 
-const props = defineProps<{ player: number }>();
-const config = useConfigStore();
+const props = withDefaults(
+  defineProps<{ player: number; defaultText?: string }>(),
+  { defaultText: "" }
+);
 
-const rangeText = ref("");
+const emit = defineEmits<{
+  (event: "save"): void;
+  (event: "cancel"): void;
+}>();
+
+const store = useStore();
+const rangeText = ref(props.defaultText);
 const rangeTextError = ref("");
 const weight = ref(100);
 const numCombos = ref(0);
@@ -156,20 +175,19 @@ const cellIndex = (row: number, col: number) => {
 };
 
 const cellValue = (row: number, col: number) => {
-  return config.range[props.player][cellIndex(row, col)];
+  return store.ranges[props.player][cellIndex(row, col)];
 };
 
 const onUpdate = async () => {
-  config.rangeRaw[props.player] = await invokes.rangeRawData(props.player);
   rangeText.value = await invokes.rangeToString(props.player);
+  numCombos.value = await invokes.rangeNumCombos(props.player);
   rangeTextError.value = "";
-  numCombos.value = config.rangeRaw[props.player].reduce((a, b) => a + b, 0);
 };
 
 const update = async (row: number, col: number, weight: number) => {
   const idx = 13 * (row - 1) + col - 1;
   await invokes.rangeUpdate(props.player, row, col, weight / 100);
-  config.range[props.player][idx] = weight;
+  store.ranges[props.player][idx] = weight;
   await onUpdate();
 };
 
@@ -197,7 +215,7 @@ const onRangeTextChange = async () => {
   } else {
     const weights = await invokes.rangeGetWeights(props.player);
     for (let i = 0; i < 13 * 13; ++i) {
-      config.range[props.player][i] = weights[i] * 100;
+      store.ranges[props.player][i] = weights[i] * 100;
     }
     await onUpdate();
   }
@@ -206,7 +224,7 @@ const onRangeTextChange = async () => {
 const dragStart = (row: number, col: number) => {
   const idx = 13 * (row - 1) + col - 1;
 
-  if (config.range[props.player][idx] !== weight.value) {
+  if (store.ranges[props.player][idx] !== weight.value) {
     draggingMode = "enabling";
     update(row, col, weight.value);
   } else {
@@ -233,12 +251,19 @@ const onWeightChange = () => {
 
 const clearRange = async () => {
   await invokes.rangeClear(props.player);
-  config.range[props.player].fill(0);
-  config.rangeRaw[props.player].fill(0);
+  store.ranges[props.player].fill(0);
   rangeText.value = "";
   rangeTextError.value = "";
   weight.value = 100;
   numCombos.value = 0;
+};
+
+const invertRange = async () => {
+  await invokes.rangeInvert(props.player);
+  for (let i = 0; i < 13 * 13; ++i) {
+    store.ranges[props.player][i] = 100 - store.ranges[props.player][i];
+  }
+  await onUpdate();
 };
 
 const loadRange = (rangeStr: unknown) => {

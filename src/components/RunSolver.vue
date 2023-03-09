@@ -65,72 +65,63 @@
       </Tippy>
     </div>
     <div class="mt-1 ml-2">
-      <label
-        :class="
-          memoryUsage > maxMemoryUsage
-            ? 'opacity-60'
-            : !store.hasSolverRun
-            ? 'cursor-pointer'
-            : ''
-        "
-      >
+      <label :class="{ 'cursor-pointer': !store.hasSolverRun }">
         <input
           v-model="isCompressionEnabled"
-          class="mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
+          class="mr-2 cursor-pointer disabled:cursor-default"
           type="radio"
           name="compression"
           :value="false"
-          :disabled="store.hasSolverRun || memoryUsage > maxMemoryUsage"
+          :disabled="store.hasSolverRun"
         />
         <span class="inline-block w-[6.75rem] ml-1">32-bit FP:</span>
         needs
         {{
-          memoryUsage >= 1023.5 * 1024 * 1024
-            ? (memoryUsage / (1024 * 1024 * 1024)).toFixed(2) + "GB"
-            : (memoryUsage / (1024 * 1024)).toFixed(0) + "MB"
+          memoryUsageRaw >= 1023.5 * 1024 * 1024
+            ? (memoryUsageRaw / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+            : (memoryUsageRaw / (1024 * 1024)).toFixed(0) + "MB"
         }}
         RAM
-        {{ memoryUsage > maxMemoryUsage ? "(out of memory)" : "" }}
+        {{ memoryUsageRaw > maxMemoryUsage ? "(out of memory)" : "" }}
       </label>
     </div>
     <div class="ml-2">
-      <label
-        :class="
-          memoryUsageCompressed > maxMemoryUsage
-            ? 'opacity-60'
-            : !store.hasSolverRun
-            ? 'cursor-pointer'
-            : ''
-        "
-      >
+      <label :class="{ 'cursor-pointer': !store.hasSolverRun }">
         <input
           v-model="isCompressionEnabled"
-          class="mr-2 cursor-pointer disabled:opacity-40 disabled:cursor-default"
+          class="mr-2 cursor-pointer disabled:cursor-default"
           type="radio"
           name="compression"
           :value="true"
-          :disabled="
-            store.hasSolverRun || memoryUsageCompressed > maxMemoryUsage
-          "
+          :disabled="store.hasSolverRun"
         />
         <span class="inline-block w-[6.75rem] ml-1">16-bit integer:</span>
         needs
         {{
-          memoryUsageCompressed >= 1023.5 * 1024 * 1024
-            ? (memoryUsageCompressed / (1024 * 1024 * 1024)).toFixed(2) + "GB"
-            : (memoryUsageCompressed / (1024 * 1024)).toFixed(0) + "MB"
+          memoryUsageRawCompressed >= 1023.5 * 1024 * 1024
+            ? (memoryUsageRawCompressed / (1024 * 1024 * 1024)).toFixed(2) +
+              "GB"
+            : (memoryUsageRawCompressed / (1024 * 1024)).toFixed(0) + "MB"
         }}
         RAM
-        {{ memoryUsageCompressed > maxMemoryUsage ? "(out of memory)" : "" }}
+        {{ memoryUsageRawCompressed > maxMemoryUsage ? "(out of memory)" : "" }}
       </label>
     </div>
+    <div v-if="store.bunchingFlop.length > 0" class="mt-1.5">
+      Additional memory usage for bunching effect:
+      {{
+        memoryUsageBunching >= 1023.5 * 1024 * 1024
+          ? (memoryUsageBunching / (1024 * 1024 * 1024)).toFixed(2) + "GB"
+          : (memoryUsageBunching / (1024 * 1024)).toFixed(0) + "MB"
+      }}
+    </div>
     <div
-      v-if="memoryUsage > maxMemoryUsage && osName === 'windows'"
+      v-if="memoryUsage > maxMemoryUsage && osName !== 'macos'"
       class="mt-1.5"
     >
-      RAM limit: {{ (maxMemoryUsage / (1024 * 1024 * 1024)).toFixed(2) }}GB (=
-      {{ (availableMemory / (1024 * 1024 * 1024)).toFixed(2) }}GB available - 5%
-      margin * {{ (totalMemory / (1024 * 1024 * 1024)).toFixed() }}GB total)
+      Available RAM:
+      {{ (availableMemory / (1024 * 1024 * 1024)).toFixed(2) }}GB /
+      {{ (totalMemory / (1024 * 1024 * 1024)).toFixed() }}GB total
     </div>
     <div
       v-if="memoryUsage > maxMemoryUsage && osName === 'macos'"
@@ -209,12 +200,32 @@
       />
     </div>
 
+    <div v-if="!areFlopMatching" class="mt-2 text-red-500 font-semibold">
+      Error: The input flop and the bunching data do not match.
+    </div>
+
+    <div
+      v-if="
+        store.isBunchingEnabled &&
+        store.bunchingFlop.length === 0 &&
+        !store.hasSolverRun
+      "
+      class="mt-2 text-orange-500 font-semibold"
+    >
+      Warning: Bunching effect is disabled because the data is not ready.
+    </div>
+
     <div class="flex mt-6 gap-3">
       <button
         class="button-base button-blue"
         :disabled="
           store.hasSolverRun ||
-          memoryUsageCompressed > maxMemoryUsage ||
+          store.isBunchingRunning ||
+          memoryUsageSelected > maxMemoryUsage ||
+          !areFlopMatching ||
+          numThreads < 1 ||
+          numThreads > 64 ||
+          numThreads % 1 !== 0 ||
           targetExploitability <= 0 ||
           maxIterations < 0 ||
           maxIterations % 1 !== 0 ||
@@ -243,6 +254,10 @@
         v-else
         class="button-base button-green"
         :disabled="
+          store.isBunchingRunning ||
+          numThreads < 1 ||
+          numThreads > 64 ||
+          numThreads % 1 !== 0 ||
           targetExploitability <= 0 ||
           maxIterations < 0 ||
           maxIterations % 1 !== 0 ||
@@ -297,8 +312,9 @@ import {
   useStore,
   useConfigStore,
   useTmpConfigStore,
-  saveConfig,
+  useSavedConfigStore,
   saveConfigTmp,
+  saveConfig,
 } from "../store";
 import {
   MAX_AMOUNT,
@@ -425,6 +441,7 @@ const checkConfig = (
 const store = useStore();
 const config = useConfigStore();
 const tmpConfig = useTmpConfigStore();
+const savedConfig = useSavedConfigStore();
 
 const numThreads = ref(navigator.hardwareConcurrency || 1);
 const targetExploitability = ref(0.3);
@@ -433,8 +450,9 @@ const maxIterations = ref(1000);
 const isTreeBuilding = ref(false);
 const isTreeBuilt = ref(false);
 const treeStatus = ref("Module not loaded");
-const memoryUsage = ref(0);
-const memoryUsageCompressed = ref(0);
+const memoryUsageRaw = ref(0);
+const memoryUsageRawCompressed = ref(0);
+const memoryUsageBunching = ref(0);
 const osName = ref<Awaited<ReturnType<typeof invokes.osName>> | null>(null);
 const maxMemoryUsage = ref(0);
 const availableMemory = ref(0);
@@ -449,9 +467,46 @@ const elapsedTimeMs = ref(-1);
 let startTime = 0;
 let exploitabilityUpdated = false;
 
+const memoryUsage = computed(() => {
+  if (store.bunchingFlop.length > 0) {
+    return memoryUsageRaw.value + memoryUsageBunching.value;
+  } else {
+    return memoryUsageRaw.value;
+  }
+});
+
+const memoryUsageCompressed = computed(() => {
+  if (store.bunchingFlop.length > 0) {
+    return memoryUsageRawCompressed.value + memoryUsageBunching.value;
+  } else {
+    return memoryUsageRawCompressed.value;
+  }
+});
+
+const memoryUsageSelected = computed(() => {
+  if (isCompressionEnabled.value) {
+    return memoryUsageCompressed.value;
+  } else {
+    return memoryUsage.value;
+  }
+});
+
+const areFlopMatching = computed(() => {
+  const flop = savedConfig.board.slice(0, 3);
+  const bunchingFlop = store.bunchingFlop;
+  return (
+    bunchingFlop.length === 0 ||
+    (flop[0] === bunchingFlop[0] &&
+      flop[1] === bunchingFlop[1] &&
+      flop[2] === bunchingFlop[2])
+  );
+});
+
 const iterationText = computed(() => {
   if (currentIteration.value === -1) {
     return "Allocating memory...";
+  } else if (currentIteration.value === -2) {
+    return "Collecting bunching data...";
   } else {
     return `Iteration: ${currentIteration.value}`;
   }
@@ -479,16 +534,6 @@ const timeText = computed(() => {
 const buildTree = async () => {
   isTreeBuilt.value = false;
 
-  if (numThreads.value < 1 || numThreads.value % 1 !== 0) {
-    treeStatus.value = "Error: Invalid number of threads";
-    return;
-  }
-
-  if (numThreads.value > 64) {
-    treeStatus.value = "Error: Too many threads";
-    return;
-  }
-
   const configError = checkConfig(config);
   if (configError !== null) {
     treeStatus.value = `Error: ${configError}`;
@@ -500,7 +545,6 @@ const buildTree = async () => {
   treeStatus.value = "Building tree...";
 
   const errorString = await invokes.gameInit(
-    numThreads.value,
     tmpConfig.board,
     tmpConfig.startingPot,
     tmpConfig.effectiveStack,
@@ -536,8 +580,9 @@ const buildTree = async () => {
 
   saveConfig();
 
-  [memoryUsage.value, memoryUsageCompressed.value] =
+  [memoryUsageRaw.value, memoryUsageRawCompressed.value] =
     await invokes.gameMemoryUsage();
+  memoryUsageBunching.value = await invokes.gameMemoryUsageBunching();
 
   osName.value = await invokes.osName();
   [availableMemory.value, totalMemory.value] = await invokes.memory();
@@ -546,8 +591,7 @@ const buildTree = async () => {
     // available memory is not useful on macOS
     maxMemoryUsage.value = totalMemory.value * 0.7;
   } else {
-    maxMemoryUsage.value = availableMemory.value - totalMemory.value * 0.05;
-    maxMemoryUsage.value = Math.max(maxMemoryUsage.value, 0);
+    maxMemoryUsage.value = availableMemory.value;
   }
 
   if (
@@ -557,13 +601,9 @@ const buildTree = async () => {
     isCompressionEnabled.value = true;
   }
 
-  const threadText = `${numThreads.value} thread${
-    numThreads.value === 1 ? "" : "s"
-  }`;
-
   isTreeBuilding.value = false;
   isTreeBuilt.value = true;
-  treeStatus.value = `Successfully built tree (${threadText})`;
+  treeStatus.value = "Successfully built tree";
 
   store.isSolverRunning = false;
   store.isSolverPaused = false;
@@ -581,7 +621,13 @@ const runSolver = async () => {
 
   startTime = performance.now();
 
+  await invokes.setNumThreads(numThreads.value);
   await invokes.gameAllocateMemory(isCompressionEnabled.value);
+
+  if (store.isBunchingEnabled && store.bunchingFlop.length > 0) {
+    currentIteration.value = -2;
+    await invokes.gameSetBunching();
+  }
 
   currentIteration.value = 0;
   exploitability.value = Math.max(await invokes.gameExploitability(), 0);
@@ -596,6 +642,7 @@ const resumeSolver = async () => {
 
   if (startTime === 0) {
     startTime = performance.now();
+    await invokes.setNumThreads(numThreads.value);
   }
 
   const target = (config.startingPot * targetExploitability.value) / 100;

@@ -8,6 +8,7 @@ export type SideView =
   | "ip-range"
   | "board"
   | "tree-config"
+  | "bunching"
   | "run-solver"
   | "about";
 
@@ -16,7 +17,6 @@ export const saveConfigTmp = () => {
   const tmpConfig = useTmpConfigStore();
 
   tmpConfig.$patch({
-    rangeRaw: [[...config.rangeRaw[0]], [...config.rangeRaw[1]]],
     board: [...config.board],
     startingPot: config.startingPot,
     effectiveStack: config.effectiveStack,
@@ -51,7 +51,6 @@ export const saveConfig = () => {
   const savedConfig = useSavedConfigStore();
 
   savedConfig.$patch({
-    rangeRaw: [[...tmpConfig.rangeRaw[0]], [...tmpConfig.rangeRaw[1]]],
     board: tmpConfig.board,
     startingPot: tmpConfig.startingPot,
     effectiveStack: tmpConfig.effectiveStack,
@@ -85,6 +84,21 @@ export const useStore = defineStore("app", {
   state: () => ({
     navView: "solver" as NavView,
     sideView: "oop-range" as SideView,
+    headers: {
+      about: ["About"],
+      "oop-range": ["OOP Range"],
+      "ip-range": ["IP Range"],
+      board: ["Board"],
+      "tree-config": ["Tree Configuration"],
+      bunching: ["Bunching Effect"],
+      "run-solver": ["Run Solver"],
+    },
+    ranges: Array.from({ length: 6 }, () =>
+      Array.from({ length: 13 * 13 }, () => 0)
+    ),
+    isBunchingEnabled: false,
+    isBunchingRunning: false,
+    bunchingFlop: [] as number[],
     isSolverRunning: false,
     isSolverPaused: false,
     isSolverFinished: false,
@@ -105,14 +119,6 @@ export const useStore = defineStore("app", {
 
 export const useConfigStore = defineStore("config", {
   state: () => ({
-    range: [
-      Array.from({ length: 13 * 13 }, () => 0),
-      Array.from({ length: 13 * 13 }, () => 0),
-    ],
-    rangeRaw: [
-      Array.from({ length: (52 * 51) / 2 }, () => 0),
-      Array.from({ length: (52 * 51) / 2 }, () => 0),
-    ],
     board: [] as number[],
     startingPot: 20,
     effectiveStack: 100,
@@ -161,10 +167,6 @@ export const useConfigStore = defineStore("config", {
 
 export const useTmpConfigStore = defineStore("tmpConfig", {
   state: () => ({
-    rangeRaw: [
-      Array.from({ length: (52 * 51) / 2 }, () => 0),
-      Array.from({ length: (52 * 51) / 2 }, () => 0),
-    ],
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,
@@ -196,10 +198,6 @@ export const useTmpConfigStore = defineStore("tmpConfig", {
 
 export const useSavedConfigStore = defineStore("savedConfig", {
   state: () => ({
-    rangeRaw: [
-      Array.from({ length: (52 * 51) / 2 }, () => 0),
-      Array.from({ length: (52 * 51) / 2 }, () => 0),
-    ],
     board: [] as number[],
     startingPot: 0,
     effectiveStack: 0,

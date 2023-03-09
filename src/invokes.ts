@@ -9,10 +9,22 @@ export const memory = async (): Promise<number[]> => {
   return await invoke("memory");
 };
 
+export const setNumThreads = async (numThreads: number) => {
+  await invoke("set_num_threads", { numThreads });
+};
+
 /* Ranges */
+
+export const rangeNumCombos = async (player: number): Promise<number> => {
+  return await invoke("range_num_combos", { player });
+};
 
 export const rangeClear = async (player: number) => {
   await invoke("range_clear", { player });
+};
+
+export const rangeInvert = async (player: number) => {
+  await invoke("range_invert", { player });
 };
 
 export const rangeUpdate = async (
@@ -153,10 +165,23 @@ export const treeDeleteRemovedLine = async (line: string) => {
   await invoke("tree_delete_removed_line", { line });
 };
 
+/* Bunching effect */
+
+export const bunchingInit = async (board: number[]): Promise<string | null> => {
+  return await invoke("bunching_init", { board });
+};
+
+export const bunchingClear = async () => {
+  await invoke("bunching_clear");
+};
+
+export const bunchingProgress = async (): Promise<number[]> => {
+  return await invoke("bunching_progress");
+};
+
 /* Game */
 
 export const gameInit = async (
-  numThreads: number,
   board: number[],
   startingPot: number,
   effectiveStack: number,
@@ -184,7 +209,6 @@ export const gameInit = async (
   removedLines: string
 ): Promise<string | null> => {
   return await invoke("game_init", {
-    numThreads,
     board,
     startingPot,
     effectiveStack,
@@ -221,8 +245,16 @@ export const gameMemoryUsage = async (): Promise<number[]> => {
   return await invoke("game_memory_usage");
 };
 
+export const gameMemoryUsageBunching = async (): Promise<number> => {
+  return await invoke("game_memory_usage_bunching");
+};
+
 export const gameAllocateMemory = async (enableCompression: boolean) => {
   await invoke("game_allocate_memory", { enableCompression });
+};
+
+export const gameSetBunching = async () => {
+  await invoke("game_set_bunching");
 };
 
 export const gameSolveStep = async (currentIteration: number) => {

@@ -1,12 +1,8 @@
 use crate::range::*;
 use postflop_solver::*;
-use rayon::{ThreadPool, ThreadPoolBuilder};
+use rayon::ThreadPool;
 use serde::Serialize;
 use std::sync::Mutex;
-
-pub fn default_thread_pool() -> ThreadPool {
-    ThreadPoolBuilder::new().build().unwrap()
-}
 
 #[inline]
 fn decode_action(action: &str) -> Action {
@@ -73,8 +69,6 @@ pub fn weighted_average(slice: &[f32], weights: &[f32]) -> f64 {
 pub fn game_init(
     range_state: tauri::State<Mutex<RangeManager>>,
     game_state: tauri::State<Mutex<PostFlopGame>>,
-    pool_state: tauri::State<Mutex<ThreadPool>>,
-    num_threads: usize,
     board: Vec<u8>,
     starting_pot: i32,
     effective_stack: i32,
@@ -101,12 +95,6 @@ pub fn game_init(
     added_lines: String,
     removed_lines: String,
 ) -> Option<String> {
-    let mut pool = pool_state.lock().unwrap();
-    *pool = ThreadPoolBuilder::new()
-        .num_threads(num_threads)
-        .build()
-        .unwrap();
-
     let (turn, river, state) = match board.len() {
         3 => (NOT_DEALT, NOT_DEALT, BoardState::Flop),
         4 => (board[3], NOT_DEALT, BoardState::Turn),
@@ -116,7 +104,7 @@ pub fn game_init(
 
     let ranges = &range_state.lock().unwrap().0;
     let card_config = CardConfig {
-        range: *ranges,
+        range: ranges[..2].try_into().unwrap(),
         flop: board[..3].try_into().unwrap(),
         turn,
         river,
@@ -202,6 +190,12 @@ pub fn game_memory_usage(game_state: tauri::State<Mutex<PostFlopGame>>) -> (u64,
     game.memory_usage()
 }
 
+#[tauri::command]
+pub fn game_memory_usage_bunching(game_state: tauri::State<Mutex<PostFlopGame>>) -> u64 {
+    let game = game_state.lock().unwrap();
+    game.memory_usage_bunching()
+}
+
 #[tauri::command(async)]
 pub fn game_allocate_memory(
     game_state: tauri::State<Mutex<PostFlopGame>>,
@@ -209,6 +203,17 @@ pub fn game_allocate_memory(
 ) {
     let mut game = game_state.lock().unwrap();
     game.allocate_memory(enable_compression);
+}
+
+#[tauri::command(async)]
+pub fn game_set_bunching(
+    bunching_state: tauri::State<Mutex<Option<BunchingData>>>,
+    game_state: tauri::State<Mutex<PostFlopGame>>,
+) {
+    let bunching_data = bunching_state.lock().unwrap();
+    let bunching_data = bunching_data.as_ref().unwrap();
+    let mut game = game_state.lock().unwrap();
+    game.set_bunching_effect(bunching_data).unwrap();
 }
 
 #[tauri::command(async)]

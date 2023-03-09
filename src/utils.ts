@@ -16,6 +16,14 @@ export const ranks = [
 
 export const suits = ["♣", "♦", "♥", "♠"];
 
+const rankPat = "[AaKkQqJjTt2-9]";
+const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
+const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
+export const trimRegex = /\s*([-:,])\s*/g;
+export const rangeRegex = new RegExp(
+  `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
+);
+
 const suitClasses = [
   "text-green-600",
   "text-blue-600",

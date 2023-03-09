@@ -3,14 +3,17 @@
     windows_subsystem = "windows"
 )]
 
+mod bunching;
 mod range;
 mod solver;
 mod tree;
+use crate::bunching::*;
 use crate::range::*;
 use crate::solver::*;
 use crate::tree::*;
 
 use postflop_solver::*;
+use rayon::{ThreadPool, ThreadPoolBuilder};
 use std::sync::Mutex;
 use sysinfo::{System, SystemExt};
 
@@ -18,12 +21,16 @@ fn main() {
     tauri::Builder::default()
         .manage(Mutex::new(RangeManager::default()))
         .manage(Mutex::new(default_action_tree()))
+        .manage(Mutex::new(None as Option<BunchingData>))
         .manage(Mutex::new(PostFlopGame::default()))
-        .manage(Mutex::new(default_thread_pool()))
+        .manage(Mutex::new(ThreadPoolBuilder::new().build().unwrap()))
         .invoke_handler(tauri::generate_handler![
             os_name,
             memory,
+            set_num_threads,
+            range_num_combos,
             range_clear,
+            range_invert,
             range_update,
             range_from_string,
             range_to_string,
@@ -44,10 +51,15 @@ fn main() {
             tree_remove_current_node,
             tree_delete_added_line,
             tree_delete_removed_line,
+            bunching_init,
+            bunching_clear,
+            bunching_progress,
             game_init,
             game_private_cards,
             game_memory_usage,
+            game_memory_usage_bunching,
             game_allocate_memory,
+            game_set_bunching,
             game_solve_step,
             game_exploitability,
             game_finalize,
@@ -85,4 +97,12 @@ fn memory() -> (u64, u64) {
     let mut system = System::new_all();
     system.refresh_memory();
     (system.available_memory(), system.total_memory())
+}
+
+#[tauri::command]
+fn set_num_threads(pool_state: tauri::State<Mutex<ThreadPool>>, num_threads: usize) {
+    *pool_state.lock().unwrap() = ThreadPoolBuilder::new()
+        .num_threads(num_threads)
+        .build()
+        .unwrap();
 }

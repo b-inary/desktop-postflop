@@ -654,13 +654,14 @@
         </div>
       </div>
 
-      <DbItemPicker
-        class="mt-1 ml-6"
-        store-name="configurations"
-        :value="dbValue"
-        :allow-save="isInputValid"
-        @load-item="loadConfig"
-      />
+      <div class="flex-grow max-w-[18rem] mt-1 ml-6">
+        <DbItemPicker
+          store-name="configurations"
+          :value="dbValue"
+          :allow-save="isInputValid"
+          @load-item="loadConfig"
+        />
+      </div>
     </div>
 
     <div
@@ -734,7 +735,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { useConfigStore } from "../store";
+import { useStore, useConfigStore } from "../store";
 import {
   MAX_AMOUNT,
   sanitizeBetString,
@@ -775,6 +776,7 @@ type ConfigValue = {
   removedLines: string;
 };
 
+const store = useStore();
 const config = useConfigStore();
 
 const isEditMode = ref(false);
@@ -1042,6 +1044,7 @@ const startEdit = () => {
   if (config.expectedBoardLength === 0) {
     config.expectedBoardLength = Math.max(config.board.length, 3);
   }
+  store.headers["tree-config"].push("Tree Preview & Edit");
 };
 
 const clearEdit = () => {
@@ -1057,6 +1060,7 @@ const saveEdit = (addedLines: string, removedLines: string) => {
   if (config.addedLines === "" && config.removedLines === "") {
     config.expectedBoardLength = 0;
   }
+  store.headers["tree-config"].pop();
 };
 
 const cancelEdit = () => {
@@ -1064,6 +1068,7 @@ const cancelEdit = () => {
   if (config.addedLines === "" && config.removedLines === "") {
     config.expectedBoardLength = 0;
   }
+  store.headers["tree-config"].pop();
 };
 </script>
 

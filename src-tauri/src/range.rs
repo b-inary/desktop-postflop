@@ -3,12 +3,24 @@ use std::cmp::Ordering;
 use std::sync::Mutex;
 
 #[derive(Default)]
-pub struct RangeManager(pub [Range; 2]);
+pub struct RangeManager(pub [Range; 6]);
+
+#[tauri::command]
+pub fn range_num_combos(range_state: tauri::State<Mutex<RangeManager>>, player: usize) -> f64 {
+    let range = &(range_state.lock().unwrap().0)[player];
+    range.raw_data().iter().fold(0.0, |acc, &x| acc + x as f64)
+}
 
 #[tauri::command]
 pub fn range_clear(range_state: tauri::State<Mutex<RangeManager>>, player: usize) {
     let range = &mut (range_state.lock().unwrap().0)[player];
     range.clear();
+}
+
+#[tauri::command]
+pub fn range_invert(range_state: tauri::State<Mutex<RangeManager>>, player: usize) {
+    let range = &mut (range_state.lock().unwrap().0)[player];
+    range.invert();
 }
 
 #[tauri::command]

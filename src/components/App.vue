@@ -36,6 +36,9 @@
         <div v-show="store.sideView === 'tree-config'">
           <TreeConfig />
         </div>
+        <div v-show="store.sideView === 'bunching'">
+          <BunchingEffect />
+        </div>
         <div v-show="store.sideView === 'run-solver'">
           <RunSolver />
         </div>
@@ -63,22 +66,13 @@ import SideBar from "./SideBar.vue";
 import RangeEditor from "./RangeEditor.vue";
 import BoardSelector from "./BoardSelector.vue";
 import TreeConfig from "./TreeConfig.vue";
+import BunchingEffect from "./BunchingEffect.vue";
 import RunSolver from "./RunSolver.vue";
 import AboutPage from "./AboutPage.vue";
 import ResultViewer from "./ResultViewer.vue";
 
 const store = useStore();
-const header = computed(
-  () =>
-    ({
-      about: "About",
-      "oop-range": "OOP Range",
-      "ip-range": "IP Range",
-      board: "Board",
-      "tree-config": "Tree Configuration",
-      "run-solver": "Run Solver",
-    }[store.sideView])
-);
+const header = computed(() => store.headers[store.sideView].join(" > "));
 
 const clientHeight = ref(0);
 const updateClientHeight = () => {

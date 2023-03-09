@@ -1,469 +1,465 @@
 <template>
-  <div class="flex-grow max-w-[18rem]">
+  <div
+    class="w-full h-[22.5rem] px-1 border border-gray-500 rounded-md shadow text-sm overflow-x-auto overflow-y-scroll select-none"
+    @click="unselect"
+    @keydown.f2="renameItem()"
+    @keydown.delete="deleteItem(true)"
+  >
+    <!-- No saved items -->
+    <div v-if="data.length === 0" class="item-toplevel">
+      <span class="inline-block px-1">(No saved {{ storeName }})</span>
+    </div>
+
+    <!-- Depth 0 -->
     <div
-      ref="container"
-      class="w-full h-[22.5rem] px-1 border border-gray-500 rounded-md shadow text-sm overflow-x-auto overflow-y-scroll select-none"
-      @click="unselect"
-      @keydown.f2="renameItem()"
-      @keydown.delete="deleteItem(true)"
+      v-for="item0 in data"
+      :key="item0.pathStr"
+      :class="{ 'item-toplevel': !item0.isGroup }"
     >
-      <!-- No saved items -->
-      <div v-if="data.length === 0" class="item-toplevel">
-        <span class="inline-block px-1">(No saved {{ storeName }})</span>
-      </div>
+      <template v-if="item0.isGroup">
+        <!-- Open/Close button -->
+        <button
+          :class="item0.opened ? 'bottom-arrow' : 'right-arrow'"
+          @click="toggleGroup(item0)"
+        >
+          &nbsp;
+        </button>
 
-      <!-- Depth 0 -->
-      <div
-        v-for="item0 in data"
-        :key="item0.pathStr"
-        :class="{ 'item-toplevel': !item0.isGroup }"
-      >
-        <template v-if="item0.isGroup">
-          <!-- Open/Close button -->
-          <button
-            :class="item0.opened ? 'bottom-arrow' : 'right-arrow'"
-            @click="toggleGroup(item0)"
-          >
-            &nbsp;
-          </button>
+        <!-- Name edit -->
+        <input
+          v-if="item0.isEditing"
+          ref="nameInput"
+          v-model="editingName"
+          type="text"
+          :class="'px-1 py-0 text-sm ' + (!isNameValid ? 'input-error' : '')"
+          style="width: calc(100% - 1.25rem)"
+          @blur="tryRename(item0)"
+          @keydown.enter="tryRename(item0)"
+          @keydown.escape="cancelRename(item0)"
+          @keydown.delete.stop
+        />
 
-          <!-- Name edit -->
+        <!-- Group name -->
+        <label
+          v-else
+          class="inline-block"
+          @dblclick="toggleGroup(item0)"
+          @keydown.enter="toggleGroup(item0)"
+        >
           <input
-            v-if="item0.isEditing"
-            ref="nameInput"
-            v-model="editingName"
-            type="text"
-            :class="'px-1 py-0 text-sm ' + (!isNameValid ? 'input-error' : '')"
-            style="width: calc(100% - 1.25rem)"
-            @blur="tryRename(item0)"
-            @keydown.enter="tryRename(item0)"
-            @keydown.escape="cancelRename(item0)"
-            @keydown.delete.stop
+            v-model="selectedValue"
+            type="radio"
+            :name="`item-picker-${storeName}-${index}`"
+            class="sr-only peer"
+            :value="item0.pathStr"
           />
-
-          <!-- Group name -->
-          <label
-            v-else
-            class="inline-block"
-            @dblclick="toggleGroup(item0)"
-            @keydown.enter="toggleGroup(item0)"
+          <span
+            class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
           >
-            <input
-              v-model="selectedValue"
-              type="radio"
-              :name="`item-picker-${storeName}-${index}`"
-              class="sr-only peer"
-              :value="item0.pathStr"
-            />
-            <span
-              class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-            >
-              {{ item0.path[0] }}
-            </span>
-          </label>
+            {{ item0.path[0] }}
+          </span>
+        </label>
 
-          <!-- Group items -->
-          <div
-            v-if="item0.opened"
-            class="group"
-            :style="{ '--guide-decrease': guideDecrease(item0) }"
-          >
-            <!-- Empty group -->
-            <div v-if="item0.items.length === 0" class="item-inside">
-              <span class="inline-block px-1">(Empty group)</span>
-            </div>
-
-            <!-- Depth 1 -->
-            <div
-              v-for="item1 in item0.items"
-              :key="item1.pathStr"
-              :class="item1.isGroup ? 'group-inside' : 'item-inside'"
-            >
-              <template v-if="item1.isGroup">
-                <!-- Open/Close button -->
-                <button
-                  :class="item1.opened ? 'bottom-arrow' : 'right-arrow'"
-                  @click="toggleGroup(item1)"
-                >
-                  &nbsp;
-                </button>
-
-                <!-- Name edit -->
-                <input
-                  v-if="item1.isEditing"
-                  ref="nameInput"
-                  v-model="editingName"
-                  type="text"
-                  :class="
-                    'px-1 py-0 text-sm ' + (!isNameValid ? 'input-error' : '')
-                  "
-                  style="width: calc(100% - 1.25rem)"
-                  @blur="tryRename(item1)"
-                  @keydown.enter="tryRename(item1)"
-                  @keydown.escape="cancelRename(item1)"
-                  @keydown.delete.stop
-                />
-
-                <!-- Group name -->
-                <label
-                  v-else
-                  class="inline-block"
-                  @dblclick="toggleGroup(item1)"
-                  @keydown.enter="toggleGroup(item1)"
-                >
-                  <input
-                    v-model="selectedValue"
-                    type="radio"
-                    :name="`item-picker-${storeName}-${index}`"
-                    class="sr-only peer"
-                    :value="item1.pathStr"
-                  />
-                  <span
-                    class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-                  >
-                    {{ item1.path[1] }}
-                  </span>
-                </label>
-
-                <!-- Group items -->
-                <div
-                  v-if="item1.opened"
-                  class="group"
-                  :style="{
-                    '--guide-decrease': guideDecrease(item1),
-                  }"
-                >
-                  <!-- Empty group -->
-                  <div v-if="item1.items.length === 0" class="item-inside">
-                    <span class="inline-block px-1">(Empty group)</span>
-                  </div>
-
-                  <!-- Depth 2 -->
-                  <div
-                    v-for="item2 in item1.items"
-                    :key="item2.pathStr"
-                    :class="item2.isGroup ? 'group-inside' : 'item-inside'"
-                  >
-                    <template v-if="item2.isGroup">
-                      <!-- Open/Close button -->
-                      <button
-                        :class="item2.opened ? 'bottom-arrow' : 'right-arrow'"
-                        @click="toggleGroup(item2)"
-                      >
-                        &nbsp;
-                      </button>
-
-                      <!-- Name edit -->
-                      <input
-                        v-if="item2.isEditing"
-                        ref="nameInput"
-                        v-model="editingName"
-                        type="text"
-                        :class="
-                          'px-1 py-0 text-sm ' +
-                          (!isNameValid ? 'input-error' : '')
-                        "
-                        style="width: calc(100% - 1.25rem)"
-                        @blur="tryRename(item2)"
-                        @keydown.enter="tryRename(item2)"
-                        @keydown.escape="cancelRename(item2)"
-                        @keydown.delete.stop
-                      />
-
-                      <!-- Group name -->
-                      <label
-                        v-else
-                        class="inline-block"
-                        @dblclick="toggleGroup(item2)"
-                        @keydown.enter="toggleGroup(item2)"
-                      >
-                        <input
-                          v-model="selectedValue"
-                          type="radio"
-                          :name="`item-picker-${storeName}-${index}`"
-                          class="sr-only peer"
-                          :value="item2.pathStr"
-                        />
-                        <span
-                          class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-                        >
-                          {{ item2.path[2] }}
-                        </span>
-                      </label>
-
-                      <!-- Group items -->
-                      <div
-                        v-if="item2.opened"
-                        class="group"
-                        :style="{
-                          '--guide-decrease': guideDecrease(item2),
-                        }"
-                      >
-                        <!-- Empty group -->
-                        <div
-                          v-if="item2.items.length === 0"
-                          class="item-inside"
-                        >
-                          <span class="inline-block px-1">(Empty group)</span>
-                        </div>
-
-                        <!-- Depth 3 -->
-                        <div
-                          v-for="item3 in item2.items"
-                          :key="item3.pathStr"
-                          class="item-inside"
-                        >
-                          <!-- Name edit -->
-                          <input
-                            v-if="item3.isEditing"
-                            ref="nameInput"
-                            v-model="editingName"
-                            type="text"
-                            :class="
-                              'px-1 py-0 w-full text-sm ' +
-                              (!isNameValid ? 'input-error' : '')
-                            "
-                            @blur="tryRename(item3)"
-                            @keydown.enter="tryRename(item3)"
-                            @keydown.escape="cancelRename(item3)"
-                            @keydown.delete.stop
-                          />
-
-                          <!-- Item name -->
-                          <label
-                            v-else
-                            class="inline-block"
-                            @dblclick="loadItem()"
-                            @keydown.enter="loadItem()"
-                          >
-                            <input
-                              v-model="selectedValue"
-                              type="radio"
-                              :name="`item-picker-${storeName}-${index}`"
-                              class="sr-only peer"
-                              :value="item3.pathStr"
-                            />
-                            <span
-                              class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-                            >
-                              {{ item3.path[3] }}
-                            </span>
-                          </label>
-                        </div>
-                      </div>
-                    </template>
-
-                    <template v-else>
-                      <!-- Name edit -->
-                      <input
-                        v-if="item2.isEditing"
-                        ref="nameInput"
-                        v-model="editingName"
-                        type="text"
-                        :class="
-                          'px-1 py-0 w-full text-sm ' +
-                          (!isNameValid ? 'input-error' : '')
-                        "
-                        @blur="tryRename(item2)"
-                        @keydown.enter="tryRename(item2)"
-                        @keydown.escape="cancelRename(item2)"
-                        @keydown.delete.stop
-                      />
-
-                      <!-- Item name -->
-                      <label
-                        v-else
-                        class="inline-block"
-                        @dblclick="loadItem()"
-                        @keydown.enter="loadItem()"
-                      >
-                        <input
-                          v-model="selectedValue"
-                          type="radio"
-                          :name="`item-picker-${storeName}-${index}`"
-                          class="sr-only peer"
-                          :value="item2.pathStr"
-                        />
-                        <span
-                          class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-                        >
-                          {{ item2.path[2] }}
-                        </span>
-                      </label>
-                    </template>
-                  </div>
-                </div>
-              </template>
-
-              <template v-else>
-                <!-- Name edit -->
-                <input
-                  v-if="item1.isEditing"
-                  ref="nameInput"
-                  v-model="editingName"
-                  type="text"
-                  :class="
-                    'px-1 py-0 w-full text-sm ' +
-                    (!isNameValid ? 'input-error' : '')
-                  "
-                  @blur="tryRename(item1)"
-                  @keydown.enter="tryRename(item1)"
-                  @keydown.escape="cancelRename(item1)"
-                  @keydown.delete.stop
-                />
-
-                <!-- Item name -->
-                <label
-                  v-else
-                  class="inline-block"
-                  @dblclick="loadItem()"
-                  @keydown.enter="loadItem()"
-                >
-                  <input
-                    v-model="selectedValue"
-                    type="radio"
-                    :name="`item-picker-${storeName}-${index}`"
-                    class="sr-only peer"
-                    :value="item1.pathStr"
-                  />
-                  <span
-                    class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-                  >
-                    {{ item1.path[1] }}
-                  </span>
-                </label>
-              </template>
-            </div>
+        <!-- Group items -->
+        <div
+          v-if="item0.opened"
+          class="group"
+          :style="{ '--guide-decrease': guideDecrease(item0) }"
+        >
+          <!-- Empty group -->
+          <div v-if="item0.items.length === 0" class="item-inside">
+            <span class="inline-block px-1">(Empty group)</span>
           </div>
-        </template>
 
-        <template v-else>
-          <!-- Name edit -->
-          <input
-            v-if="item0.isEditing"
-            ref="nameInput"
-            v-model="editingName"
-            type="text"
-            :class="
-              'px-1 py-0 w-full text-sm ' + (!isNameValid ? 'input-error' : '')
-            "
-            @blur="tryRename(item0)"
-            @keydown.enter="tryRename(item0)"
-            @keydown.escape="cancelRename(item0)"
-            @keydown.delete.stop
-          />
-
-          <!-- Item name -->
-          <label
-            v-else
-            class="inline-block"
-            @dblclick="loadItem()"
-            @keydown.enter="loadItem()"
+          <!-- Depth 1 -->
+          <div
+            v-for="item1 in item0.items"
+            :key="item1.pathStr"
+            :class="item1.isGroup ? 'group-inside' : 'item-inside'"
           >
-            <input
-              v-model="selectedValue"
-              type="radio"
-              :name="`item-picker-${storeName}-${index}`"
-              class="sr-only peer"
-              :value="item0.pathStr"
-            />
-            <span
-              class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
-            >
-              {{ item0.path[0] }}
-            </span>
-          </label>
-        </template>
-      </div>
-    </div>
+            <template v-if="item1.isGroup">
+              <!-- Open/Close button -->
+              <button
+                :class="item1.opened ? 'bottom-arrow' : 'right-arrow'"
+                @click="toggleGroup(item1)"
+              >
+                &nbsp;
+              </button>
 
-    <div v-if="errorOccured" class="mt-3 text-red-500 font-bold">
-      Something went wrong. Please relaunch the app.
-    </div>
+              <!-- Name edit -->
+              <input
+                v-if="item1.isEditing"
+                ref="nameInput"
+                v-model="editingName"
+                type="text"
+                :class="
+                  'px-1 py-0 text-sm ' + (!isNameValid ? 'input-error' : '')
+                "
+                style="width: calc(100% - 1.25rem)"
+                @blur="tryRename(item1)"
+                @keydown.enter="tryRename(item1)"
+                @keydown.escape="cancelRename(item1)"
+                @keydown.delete.stop
+              />
 
-    <div class="flex flex-col mt-4 gap-3">
-      <div class="grid grid-cols-3 w-full gap-3">
-        <button
-          class="button-base button-blue button-overrides"
-          :disabled="selectedItem?.item?.isGroup ?? true"
-          @click="loadItem()"
-        >
-          Load
-        </button>
+              <!-- Group name -->
+              <label
+                v-else
+                class="inline-block"
+                @dblclick="toggleGroup(item1)"
+                @keydown.enter="toggleGroup(item1)"
+              >
+                <input
+                  v-model="selectedValue"
+                  type="radio"
+                  :name="`item-picker-${storeName}-${index}`"
+                  class="sr-only peer"
+                  :value="item1.pathStr"
+                />
+                <span
+                  class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
+                >
+                  {{ item1.path[1] }}
+                </span>
+              </label>
 
-        <button
-          class="button-base button-blue button-overrides"
-          :disabled="errorOccured || !allowSave || isEditing"
-          @click="addOrOverwriteItem()"
-        >
-          {{ selectedItem?.item?.isGroup === false ? "Overwrite" : "Save" }}
-        </button>
+              <!-- Group items -->
+              <div
+                v-if="item1.opened"
+                class="group"
+                :style="{
+                  '--guide-decrease': guideDecrease(item1),
+                }"
+              >
+                <!-- Empty group -->
+                <div v-if="item1.items.length === 0" class="item-inside">
+                  <span class="inline-block px-1">(Empty group)</span>
+                </div>
 
-        <button
-          class="button-base button-blue button-overrides"
-          :disabled="errorOccured || selectedValue === false"
-          @click="renameItem()"
-        >
-          Rename
-        </button>
-      </div>
+                <!-- Depth 2 -->
+                <div
+                  v-for="item2 in item1.items"
+                  :key="item2.pathStr"
+                  :class="item2.isGroup ? 'group-inside' : 'item-inside'"
+                >
+                  <template v-if="item2.isGroup">
+                    <!-- Open/Close button -->
+                    <button
+                      :class="item2.opened ? 'bottom-arrow' : 'right-arrow'"
+                      @click="toggleGroup(item2)"
+                    >
+                      &nbsp;
+                    </button>
 
-      <div class="grid grid-cols-2 w-full gap-3">
-        <button
-          class="button-base button-blue button-overrides"
-          :disabled="
-            errorOccured ||
-            (selectedItem !== null &&
-              selectedItem.item.path.length +
-                (selectedItem.item.isGroup ? 1 : 0) >=
-                4)
+                    <!-- Name edit -->
+                    <input
+                      v-if="item2.isEditing"
+                      ref="nameInput"
+                      v-model="editingName"
+                      type="text"
+                      :class="
+                        'px-1 py-0 text-sm ' +
+                        (!isNameValid ? 'input-error' : '')
+                      "
+                      style="width: calc(100% - 1.25rem)"
+                      @blur="tryRename(item2)"
+                      @keydown.enter="tryRename(item2)"
+                      @keydown.escape="cancelRename(item2)"
+                      @keydown.delete.stop
+                    />
+
+                    <!-- Group name -->
+                    <label
+                      v-else
+                      class="inline-block"
+                      @dblclick="toggleGroup(item2)"
+                      @keydown.enter="toggleGroup(item2)"
+                    >
+                      <input
+                        v-model="selectedValue"
+                        type="radio"
+                        :name="`item-picker-${storeName}-${index}`"
+                        class="sr-only peer"
+                        :value="item2.pathStr"
+                      />
+                      <span
+                        class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
+                      >
+                        {{ item2.path[2] }}
+                      </span>
+                    </label>
+
+                    <!-- Group items -->
+                    <div
+                      v-if="item2.opened"
+                      class="group"
+                      :style="{
+                        '--guide-decrease': guideDecrease(item2),
+                      }"
+                    >
+                      <!-- Empty group -->
+                      <div v-if="item2.items.length === 0" class="item-inside">
+                        <span class="inline-block px-1">(Empty group)</span>
+                      </div>
+
+                      <!-- Depth 3 -->
+                      <div
+                        v-for="item3 in item2.items"
+                        :key="item3.pathStr"
+                        class="item-inside"
+                      >
+                        <!-- Name edit -->
+                        <input
+                          v-if="item3.isEditing"
+                          ref="nameInput"
+                          v-model="editingName"
+                          type="text"
+                          :class="
+                            'px-1 py-0 w-full text-sm ' +
+                            (!isNameValid ? 'input-error' : '')
+                          "
+                          @blur="tryRename(item3)"
+                          @keydown.enter="tryRename(item3)"
+                          @keydown.escape="cancelRename(item3)"
+                          @keydown.delete.stop
+                        />
+
+                        <!-- Item name -->
+                        <label
+                          v-else
+                          class="inline-block"
+                          @dblclick="loadItem()"
+                          @keydown.enter="loadItem()"
+                        >
+                          <input
+                            v-model="selectedValue"
+                            type="radio"
+                            :name="`item-picker-${storeName}-${index}`"
+                            class="sr-only peer"
+                            :value="item3.pathStr"
+                          />
+                          <span
+                            class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
+                          >
+                            {{ item3.path[3] }}
+                          </span>
+                        </label>
+                      </div>
+                    </div>
+                  </template>
+
+                  <template v-else>
+                    <!-- Name edit -->
+                    <input
+                      v-if="item2.isEditing"
+                      ref="nameInput"
+                      v-model="editingName"
+                      type="text"
+                      :class="
+                        'px-1 py-0 w-full text-sm ' +
+                        (!isNameValid ? 'input-error' : '')
+                      "
+                      @blur="tryRename(item2)"
+                      @keydown.enter="tryRename(item2)"
+                      @keydown.escape="cancelRename(item2)"
+                      @keydown.delete.stop
+                    />
+
+                    <!-- Item name -->
+                    <label
+                      v-else
+                      class="inline-block"
+                      @dblclick="loadItem()"
+                      @keydown.enter="loadItem()"
+                    >
+                      <input
+                        v-model="selectedValue"
+                        type="radio"
+                        :name="`item-picker-${storeName}-${index}`"
+                        class="sr-only peer"
+                        :value="item2.pathStr"
+                      />
+                      <span
+                        class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
+                      >
+                        {{ item2.path[2] }}
+                      </span>
+                    </label>
+                  </template>
+                </div>
+              </div>
+            </template>
+
+            <template v-else>
+              <!-- Name edit -->
+              <input
+                v-if="item1.isEditing"
+                ref="nameInput"
+                v-model="editingName"
+                type="text"
+                :class="
+                  'px-1 py-0 w-full text-sm ' +
+                  (!isNameValid ? 'input-error' : '')
+                "
+                @blur="tryRename(item1)"
+                @keydown.enter="tryRename(item1)"
+                @keydown.escape="cancelRename(item1)"
+                @keydown.delete.stop
+              />
+
+              <!-- Item name -->
+              <label
+                v-else
+                class="inline-block"
+                @dblclick="loadItem()"
+                @keydown.enter="loadItem()"
+              >
+                <input
+                  v-model="selectedValue"
+                  type="radio"
+                  :name="`item-picker-${storeName}-${index}`"
+                  class="sr-only peer"
+                  :value="item1.pathStr"
+                />
+                <span
+                  class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
+                >
+                  {{ item1.path[1] }}
+                </span>
+              </label>
+            </template>
+          </div>
+        </div>
+      </template>
+
+      <template v-else>
+        <!-- Name edit -->
+        <input
+          v-if="item0.isEditing"
+          ref="nameInput"
+          v-model="editingName"
+          type="text"
+          :class="
+            'px-1 py-0 w-full text-sm ' + (!isNameValid ? 'input-error' : '')
           "
-          @click="addGroup()"
-        >
-          Add Group
-        </button>
+          @blur="tryRename(item0)"
+          @keydown.enter="tryRename(item0)"
+          @keydown.escape="cancelRename(item0)"
+          @keydown.delete.stop
+        />
 
-        <button
-          class="button-base button-red button-overrides"
-          :disabled="errorOccured || selectedValue === false"
-          @click="deleteItem(true)"
+        <!-- Item name -->
+        <label
+          v-else
+          class="inline-block"
+          @dblclick="loadItem()"
+          @keydown.enter="loadItem()"
         >
-          Delete
-        </button>
+          <input
+            v-model="selectedValue"
+            type="radio"
+            :name="`item-picker-${storeName}-${index}`"
+            class="sr-only peer"
+            :value="item0.pathStr"
+          />
+          <span
+            class="inline-block px-1 rounded-sm whitespace-nowrap peer-checked:bg-blue-600 peer-checked:text-white"
+          >
+            {{ item0.path[0] }}
+          </span>
+        </label>
+      </template>
+    </div>
+  </div>
 
-        <button
-          class="button-base button-green button-overrides"
-          :disabled="errorOccured || isEditing"
-          @click="importJson"
-        >
-          Import JSON
-        </button>
+  <div v-if="errorOccured" class="mt-3 text-red-500 font-semibold">
+    Something went wrong. Please relaunch the app.
+  </div>
 
-        <button
-          class="button-base button-green button-overrides"
-          :disabled="errorOccured || isEditing"
-          @click="exportJson"
-        >
-          Export JSON
-        </button>
-      </div>
+  <div class="flex flex-col mt-4 gap-3">
+    <div class="grid grid-cols-3 w-full gap-3">
+      <button
+        class="button-base button-blue button-overrides"
+        :disabled="selectedItem?.item?.isGroup ?? true"
+        @click="loadItem()"
+      >
+        Load
+      </button>
+
+      <button
+        class="button-base button-blue button-overrides"
+        :disabled="errorOccured || !allowSave || isEditing"
+        @click="addOrOverwriteItem()"
+      >
+        {{ selectedItem?.item?.isGroup === false ? "Overwrite" : "Save" }}
+      </button>
+
+      <button
+        class="button-base button-blue button-overrides"
+        :disabled="errorOccured || selectedValue === false"
+        @click="renameItem()"
+      >
+        Rename
+      </button>
     </div>
 
-    <div
-      v-if="importError !== ''"
-      class="flex flex-col mt-4 px-2 py-1 text-red-500 bg-red-50 border-2 border-red-600 rounded-md font-semibold"
-    >
-      <div class="flex">
-        Error: Import failed.
-        <button
-          class="w-6 h-6 ml-auto text-gray-700 opacity-70 hover:opacity-100"
-          @click="importError = ''"
-        >
-          <XMarkIcon class="w-full h-full" />
-        </button>
-      </div>
-      <div>- {{ importError }}</div>
+    <div class="grid grid-cols-2 w-full gap-3">
+      <button
+        class="button-base button-blue button-overrides"
+        :disabled="
+          errorOccured ||
+          (selectedItem !== null &&
+            selectedItem.item.path.length +
+              (selectedItem.item.isGroup ? 1 : 0) >=
+              4)
+        "
+        @click="addGroup()"
+      >
+        Add Group
+      </button>
+
+      <button
+        class="button-base button-red button-overrides"
+        :disabled="errorOccured || selectedValue === false"
+        @click="deleteItem(true)"
+      >
+        Delete
+      </button>
+
+      <button
+        v-if="!hideImportExport"
+        class="button-base button-green button-overrides"
+        :disabled="errorOccured || isEditing"
+        @click="importJson"
+      >
+        Import JSON
+      </button>
+
+      <button
+        v-if="!hideImportExport"
+        class="button-base button-green button-overrides"
+        :disabled="errorOccured || isEditing"
+        @click="exportJson"
+      >
+        Export JSON
+      </button>
     </div>
+  </div>
+
+  <div
+    v-if="importError !== ''"
+    class="flex flex-col mt-4 px-2 py-1 text-red-500 bg-red-50 border-2 border-red-600 rounded-md font-semibold"
+  >
+    <div class="flex">
+      Error: Import failed.
+      <button
+        class="w-6 h-6 ml-auto text-gray-700 opacity-70 hover:opacity-100"
+        @click="importError = ''"
+      >
+        <XMarkIcon class="w-full h-full" />
+      </button>
+    </div>
+    <div>- {{ importError }}</div>
   </div>
 </template>
 
@@ -586,9 +582,13 @@ interface Props {
   index?: number;
   value: unknown;
   allowSave: boolean;
+  hideImportExport?: boolean;
 }
 
-const props = withDefaults(defineProps<Props>(), { index: 0 });
+const props = withDefaults(defineProps<Props>(), {
+  index: 0,
+  hideImportExport: false,
+});
 const emit = defineEmits<{ (event: "load-item", value: unknown): void }>();
 
 const data = ref<(Item | Group)[]>([]);
