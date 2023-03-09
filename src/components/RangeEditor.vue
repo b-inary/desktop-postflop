@@ -64,7 +64,7 @@
           </button>
         </div>
 
-        <div v-if="rangeTextError" class="mt-1 text-red-600">
+        <div v-if="rangeTextError" class="mt-1 text-red-500">
           Error: {{ rangeTextError }}
         </div>
       </div>

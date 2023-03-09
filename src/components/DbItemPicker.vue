@@ -378,7 +378,7 @@
     </div>
 
     <div v-if="errorOccured" class="mt-3 text-red-500 font-bold">
-      Something went wrong. Please reload the page.
+      Something went wrong. Please relaunch the app.
     </div>
 
     <div class="flex flex-col mt-4 gap-3">
@@ -451,7 +451,7 @@
 
     <div
       v-if="importError !== ''"
-      class="flex flex-col mt-4 px-2 py-1 text-red-500 bg-red-100 border-2 border-red-500 rounded-md font-semibold"
+      class="flex flex-col mt-4 px-2 py-1 text-red-500 bg-red-50 border-2 border-red-600 rounded-md font-semibold"
     >
       <div class="flex">
         Error: Import failed.
@@ -1130,6 +1130,11 @@ type JsonItem = {
 const checkJson = (array: JsonItem[]) => {
   if (!Array.isArray(array)) return false;
 
+  let valueType = "";
+  if (props.storeName === "ranges") valueType = "string";
+  if (props.storeName === "configurations") valueType = "object";
+  if (valueType === "") return false;
+
   const map = new Map<string, boolean>();
   map.set(JSON.stringify([]), true);
 
@@ -1138,7 +1143,8 @@ const checkJson = (array: JsonItem[]) => {
       typeof item.isGroup !== "boolean" ||
       !Array.isArray(item.path) ||
       item.path.some((x) => typeof x !== "string") ||
-      item.path.length > (item.isGroup ? 3 : 4)
+      item.path.length > (item.isGroup ? 3 : 4) ||
+      (!item.isGroup && typeof item.value !== valueType)
     ) {
       return false;
     }
