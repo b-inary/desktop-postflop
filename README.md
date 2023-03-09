@@ -36,9 +36,9 @@ See the [WASM Postflop repository] for more detailed comparisons, including some
     - We do not distribute macOS builds because we are not enrolled in the Apple Developer Program and cannot sign the app.
   - Linux: glibc 2.31 and later (e.g., Ubuntu 20.04 and later)
 - CPU
-  - x86-64: must support AVX instructions
-    - Intel: Sandy Bridge and later
-    - AMD: Zen (1st gen) and later
+  - x86-64: must support AVX2 instructions
+    - Intel: Haswell (2013) and later
+    - AMD: Zen (1st gen; 2017) and later
   - Apple silicon: M1 and later
 
 ## Download
