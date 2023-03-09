@@ -102,6 +102,7 @@ export const useStore = defineStore("app", {
     isSolverRunning: false,
     isSolverPaused: false,
     isSolverFinished: false,
+    isSolverError: false,
     isFinalizing: false,
   }),
 
@@ -111,6 +112,7 @@ export const useStore = defineStore("app", {
         state.isSolverRunning ||
         state.isSolverPaused ||
         state.isSolverFinished ||
+        state.isSolverError ||
         state.isFinalizing
       );
     },

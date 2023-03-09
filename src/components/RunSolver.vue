@@ -294,6 +294,8 @@
             ? "Finalizing..."
             : store.isSolverPaused
             ? "Solver paused."
+            : store.isSolverError
+            ? solverErrorText
             : "Solver finished."
         }}
       </div>
@@ -458,6 +460,7 @@ const maxMemoryUsage = ref(0);
 const availableMemory = ref(0);
 const totalMemory = ref(0);
 const isCompressionEnabled = ref(false);
+const solverErrorText = ref("");
 const terminateFlag = ref(false);
 const pauseFlag = ref(false);
 const currentIteration = ref(-1);
@@ -608,6 +611,7 @@ const buildTree = async () => {
   store.isSolverRunning = false;
   store.isSolverPaused = false;
   store.isSolverFinished = false;
+  store.isSolverError = false;
 };
 
 const runSolver = async () => {
@@ -626,7 +630,13 @@ const runSolver = async () => {
 
   if (store.isBunchingEnabled && store.bunchingFlop.length > 0) {
     currentIteration.value = -2;
-    await invokes.gameSetBunching();
+    const errorString = await invokes.gameSetBunching();
+    if (errorString) {
+      solverErrorText.value = "Error: " + errorString;
+      store.isSolverRunning = false;
+      store.isSolverError = true;
+      return;
+    }
   }
 
   currentIteration.value = 0;

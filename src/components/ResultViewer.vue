@@ -14,6 +14,8 @@
         ? "Solver running..."
         : store.isFinalizing
         ? "Finalizing..."
+        : store.isSolverError
+        ? "Solver error."
         : "Solver paused."
     }}
   </div>

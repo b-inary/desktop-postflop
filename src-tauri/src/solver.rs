@@ -209,11 +209,11 @@ pub fn game_allocate_memory(
 pub fn game_set_bunching(
     bunching_state: tauri::State<Mutex<Option<BunchingData>>>,
     game_state: tauri::State<Mutex<PostFlopGame>>,
-) {
+) -> Option<String> {
     let bunching_data = bunching_state.lock().unwrap();
     let bunching_data = bunching_data.as_ref().unwrap();
     let mut game = game_state.lock().unwrap();
-    game.set_bunching_effect(bunching_data).unwrap();
+    game.set_bunching_effect(bunching_data).err()
 }
 
 #[tauri::command(async)]

@@ -253,8 +253,8 @@ export const gameAllocateMemory = async (enableCompression: boolean) => {
   await invoke("game_allocate_memory", { enableCompression });
 };
 
-export const gameSetBunching = async () => {
-  await invoke("game_set_bunching");
+export const gameSetBunching = async (): Promise<string | null> => {
+  return await invoke("game_set_bunching");
 };
 
 export const gameSolveStep = async (currentIteration: number) => {

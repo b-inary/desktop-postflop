@@ -98,7 +98,7 @@
           class="button-base button-blue"
           :disabled="
             numCombos.every((x) => x === 0) ||
-            hasBunchingRun ||
+            store.isBunchingRunning ||
             store.isSolverRunning ||
             numThreads < 1 ||
             numThreads > 64 ||
@@ -163,11 +163,11 @@
       </div>
 
       <div class="mt-3">
-        <span>
+        <span class="flex items-center">
           Status:
           <span
             v-if="store.isBunchingRunning"
-            class="spinner inline-block mx-3"
+            class="spinner inline-block ml-2 mr-2.5"
           ></span>
           {{ statusText }}
         </span>
@@ -176,7 +176,7 @@
           <span
             v-for="item in store.bunchingFlop.map(cardText)"
             :key="item.rank + item.suit"
-            :class="'inline-block ' + item.colorClass"
+            :class="'inline-block mx-px ' + item.colorClass"
             >{{ item.rank + item.suit }}</span
           >]
         </span>
