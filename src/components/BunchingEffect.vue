@@ -71,7 +71,7 @@
             v-model="rangeTexts[i - 1]"
             type="text"
             :class="
-              'flex-grow mt-3 px-2 py-1 rounded-lg text-sm ' +
+              'w-44 mt-3 px-2 py-1 rounded-lg text-sm ' +
               (isRangeTextError[i - 1] ? ' input-error' : '')
             "
             @focus="($event.target as HTMLInputElement).select()"
@@ -79,7 +79,9 @@
           />
           <div class="mt-2 text-center">
             {{ numCombos[i - 1].toFixed(1) }} combos ({{
-              ((numCombos[i - 1] * 100) / ((52 * 51) / 2)).toFixed(1)
+              numCombos[i - 1] >= 0.9995 * ((52 * 51) / 2)
+                ? "100"
+                : ((numCombos[i - 1] * 100) / ((52 * 51) / 2)).toFixed(1)
             }}%)
           </div>
           <div class="flex mt-3 w-full justify-center gap-3">
