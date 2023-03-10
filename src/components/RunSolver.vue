@@ -107,7 +107,10 @@
         {{ memoryUsageRawCompressed > maxMemoryUsage ? "(out of memory)" : "" }}
       </label>
     </div>
-    <div v-if="store.bunchingFlop.length > 0" class="mt-1.5">
+    <div
+      v-if="store.isBunchingEnabled && store.bunchingFlop.length > 0"
+      class="mt-1.5"
+    >
       Additional memory usage for bunching effect:
       {{
         memoryUsageBunching >= 1023.5 * 1024 * 1024
@@ -471,7 +474,7 @@ let startTime = 0;
 let exploitabilityUpdated = false;
 
 const memoryUsage = computed(() => {
-  if (store.bunchingFlop.length > 0) {
+  if (store.isBunchingEnabled && store.bunchingFlop.length > 0) {
     return memoryUsageRaw.value + memoryUsageBunching.value;
   } else {
     return memoryUsageRaw.value;
@@ -479,7 +482,7 @@ const memoryUsage = computed(() => {
 });
 
 const memoryUsageCompressed = computed(() => {
-  if (store.bunchingFlop.length > 0) {
+  if (store.isBunchingEnabled && store.bunchingFlop.length > 0) {
     return memoryUsageRawCompressed.value + memoryUsageBunching.value;
   } else {
     return memoryUsageRawCompressed.value;
@@ -498,6 +501,7 @@ const areFlopMatching = computed(() => {
   const flop = savedConfig.board.slice(0, 3);
   const bunchingFlop = store.bunchingFlop;
   return (
+    !store.isBunchingEnabled ||
     bunchingFlop.length === 0 ||
     (flop[0] === bunchingFlop[0] &&
       flop[1] === bunchingFlop[1] &&

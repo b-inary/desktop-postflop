@@ -21,7 +21,10 @@ pub fn bunching_init(
             *bunching_state.lock().unwrap() = Some(bunching_data);
             None
         }
-        Err(e) => Some(e),
+        Err(e) => {
+            *bunching_state.lock().unwrap() = None;
+            Some(e)
+        }
     }
 }
 

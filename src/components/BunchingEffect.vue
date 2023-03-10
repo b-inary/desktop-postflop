@@ -61,7 +61,7 @@
     <div v-if="store.isBunchingEnabled" class="mt-6">
       <div class="flex gap-8">
         <div v-for="i in 4" :key="i">
-          <div class="text-gray-600">Player {{ i }}:</div>
+          <div class="text-[1.0625rem]">Fold Range {{ i }}</div>
           <RangeMiniViewer
             class="w-44 h-44 mt-2 cursor-pointer"
             :player="i + 1"
@@ -240,7 +240,7 @@ const onUpdateLocal = async (player: number) => {
 
 const editRange = async (player: number) => {
   rangeTextCopy.value = await invokes.rangeToString(player + 2);
-  store.headers["bunching"].push(`Player ${player + 1}`);
+  store.headers["bunching"].push(`Fold Range ${player + 1}`);
   editingPlayer.value = player;
 };
 
@@ -282,17 +282,19 @@ const clearRange = async (player: number) => {
 };
 
 const runPrecomputation = async () => {
+  store.bunchingFlop = [];
+
   const errorString = await invokes.bunchingInit(configStore.board);
   if (errorString) {
     statusText.value = `Error: ${errorString}`;
-  } else {
-    store.bunchingFlop = [];
-    flopCopy.value = configStore.board.slice(0, 3);
-    hasBunchingRun.value = true;
-    statusText.value = "Phase 1/3 - Preparing...";
-    elapsedTimeMs.value = 0;
-    await resumePrecomputation();
+    return;
   }
+
+  statusText.value = "Phase 1/3 - Preparing...";
+  flopCopy.value = configStore.board.slice(0, 3);
+  hasBunchingRun.value = true;
+  elapsedTimeMs.value = 0;
+  await resumePrecomputation();
 };
 
 const clearPrecomputation = async () => {
@@ -301,8 +303,9 @@ const clearPrecomputation = async () => {
   } else {
     await invokes.bunchingClear();
     store.bunchingFlop = [];
-    hasBunchingRun.value = false;
     statusText.value = "No bunching data";
+    hasBunchingRun.value = false;
+    isBunchingPaused.value = false;
   }
 };
 
@@ -316,8 +319,8 @@ const resumePrecomputation = async () => {
     if (terminateFlag.value) {
       await invokes.bunchingClear();
       store.bunchingFlop = [];
-      hasBunchingRun.value = false;
       statusText.value = "No bunching data";
+      hasBunchingRun.value = false;
       break;
     }
 
@@ -334,7 +337,7 @@ const resumePrecomputation = async () => {
       break;
     }
 
-    statusText.value = `Phase ${phase}/3 - ${percent}%`;
+    statusText.value = `Phase ${phase}/3 - ${percent}% completed...`;
   }
 
   elapsedTimeMs.value += performance.now() - startTime;

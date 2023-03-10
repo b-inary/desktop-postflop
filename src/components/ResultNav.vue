@@ -364,7 +364,10 @@ const isSelectedChanceSkipped = computed(() => {
 
 const currentBoard = computed(() => {
   const board = [...config.board];
-  for (let i = 3; i < selectedSpotIndex.value; ++i) {
+  const endIndex = selectedChance.value
+    ? selectedChanceIndex.value
+    : selectedSpotIndex.value;
+  for (let i = 3; i < endIndex; ++i) {
     const spot = spots.value[i];
     if (spot.type === "chance") {
       const card = spot.selectedIndex;
