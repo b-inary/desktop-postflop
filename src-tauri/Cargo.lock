@@ -488,7 +488,7 @@ dependencies = [
 
 [[package]]
 name = "desktop-postflop"
-version = "0.2.4"
+version = "0.2.5"
 dependencies = [
  "postflop-solver",
  "rayon",
@@ -1792,7 +1792,7 @@ dependencies = [
 [[package]]
 name = "postflop-solver"
 version = "0.1.0"
-source = "git+https://github.com/b-inary/postflop-solver#e6e4d24e76ee27eceead6337ce036b32cb9788a6"
+source = "git+https://github.com/b-inary/postflop-solver#2151b61c4779177f45df149079c913ac76fa5296"
 dependencies = [
  "once_cell",
  "rayon",
