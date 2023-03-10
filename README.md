@@ -96,6 +96,15 @@ If you want to use stable Rust instead of nightly Rust, please modify the follow
 [Node.js]: https://nodejs.org/en/
 [Tauri documentation]: https://tauri.app/v1/guides/getting-started/prerequisites/#setting-up-linux
 
+## Roadmap (in order of priority)
+
+- Results saving/loading feature ([#8](https://github.com/b-inary/desktop-postflop/issues/8))
+- Short deck and FLHE support
+- Hand filter feature for the result viewer ([#6](https://github.com/b-inary/desktop-postflop/issues/6))
+- Aggregated reporting feature for multiple flops
+- Node-locking feature
+- GTO training mode ([#9](https://github.com/b-inary/desktop-postflop/issues/9))
+
 ## License
 
 Copyright (C) 2022 Wataru Inariba
