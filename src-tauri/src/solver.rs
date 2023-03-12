@@ -379,7 +379,7 @@ pub fn game_get_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> GameRe
     ];
 
     let is_empty = |player: usize| weights[player].iter().all(|&w| w == 0.0);
-    let is_empty_flag = is_empty(0) as i32 + 2 * is_empty(1) as i32;
+    let mut is_empty_flag = is_empty(0) as i32 + 2 * is_empty(1) as i32;
 
     let mut normalizer = [Vec::new(), Vec::new()];
     let mut equity = [Vec::new(), Vec::new()];
@@ -391,10 +391,14 @@ pub fn game_get_results(game_state: tauri::State<Mutex<PostFlopGame>>) -> GameRe
         normalizer[1].extend(weights[1].iter());
     } else {
         game.cache_normalized_weights();
-
         normalizer[0].extend(round_iter(game.normalized_weights(0).iter()));
         normalizer[1].extend(round_iter(game.normalized_weights(1).iter()));
+        if normalizer[0].iter().all(|&w| w == 0.0) {
+            is_empty_flag = 3;
+        }
+    }
 
+    if is_empty_flag == 0 {
         let equity_raw = [game.equity(0), game.equity(1)];
         let ev_raw = [game.expected_values(0), game.expected_values(1)];
 
