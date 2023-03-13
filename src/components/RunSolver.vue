@@ -43,21 +43,20 @@
             <ul class="pl-6 list-disc">
               <li class="mt-1">
                 Memory efficiency: 16-bit integer > 32-bit FP. The 16-bit
-                integer mode uses only about half the memory as the 32-bit FP
+                integer mode uses only about half the memory of the 32-bit FP
                 mode.
               </li>
               <li class="mt-1">
-                Calculation speed: depends on the environment. The 32-bit FP
-                mode requires fewer execution instructions than the 16-bit
-                integer mode. However, memory reads and writes can become a
-                bottleneck in a highly multithreaded environment, and in such
-                situations, the 16-bit integer mode may result in better
-                performance.
+                Performance: Depends on the environment. The 32-bit FP mode
+                requires fewer execution instructions than the 16-bit integer
+                mode. However, memory reads and writes can become a bottleneck
+                in highly multithreaded environments, and in such situations the
+                16-bit integer mode may provide better performance.
               </li>
               <li class="mt-1">
-                Significant figures: 32-bit FP (about 7 digits) > 16-bit integer
+                Significant digits: 32-bit FP (about 7 digits) > 16-bit integer
                 (about 4 digits). The 16-bit integer mode is not suitable for
-                satisfying a target exploitability below 0.1%.
+                satisfying an exploitability target of less than 0.1%.
               </li>
             </ul>
           </div>
@@ -149,23 +148,23 @@
           <div class="px-1 py-0.5 text-justify">
             <div>
               Specifies the acceptable distance to the Nash equilibrium. A lower
-              value produces more accurate results but also requires more
+              value gives more accurate results, but also requires more
               computation time.
             </div>
             <div class="mt-3">
               <span class="underline">A more detailed description:</span>
-              If a Nash equilibrium solution is obtained, the strategies of both
-              players become MESs (Maximally Exploitative Strategies). Using
-              this property, we define the distance to the Nash equilibrium of
-              the obtained strategy as follows:
+              When a Nash equilibrium solution is obtained, the strategies of
+              both players become MESs (Maximally Exploitative Strategies) to
+              each other. Using this property, we define the distance to the
+              Nash equilibrium of the obtained strategy as follows:
             </div>
             <div class="my-1 text-center">
               Distance = (Opponent's MES EV) - (Opponent's obtained EV).
             </div>
             <div>
               This distance is always non-negative and is zero if and only if
-              the obtained strategy is a part of a certain Nash equilibrium. The
-              exploitability is defined as the average distance of both players.
+              the obtained strategy is a part of a particular Nash equilibrium.
+              Exploitability is defined as the average distance of both players.
             </div>
           </div>
         </template>
@@ -203,7 +202,10 @@
       />
     </div>
 
-    <div v-if="!areFlopMatching" class="mt-2 text-red-500 font-semibold">
+    <div
+      v-if="!areFlopMatching && !store.hasSolverRun"
+      class="mt-2 text-red-500 font-semibold"
+    >
       Error: The input flop and the bunching data do not match.
     </div>
 
