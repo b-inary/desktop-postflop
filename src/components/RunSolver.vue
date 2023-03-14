@@ -110,7 +110,7 @@
       v-if="store.isBunchingEnabled && store.bunchingFlop.length > 0"
       class="mt-1.5"
     >
-      Additional memory usage for bunching effect:
+      Additional RAM usage for bunching effect:
       {{
         memoryUsageBunching >= 1023.5 * 1024 * 1024
           ? (memoryUsageBunching / (1024 * 1024 * 1024)).toFixed(2) + "GB"

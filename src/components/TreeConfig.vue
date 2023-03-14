@@ -146,16 +146,23 @@
                         valid for raises.
                       </li>
                       <li class="mt-1">All-in (e.g., "a").</li>
-                      <li class="mt-1">Constant addition (e.g., "100c").</li>
+                      <li class="mt-1">
+                        Constant addition (e.g., "100c"). For raises, you can
+                        also specify a cap on the number of raises (e.g.,
+                        "20c3r").
+                      </li>
                       <li class="mt-1">
                         Geometric size, i.e., dividing the remaining stack into
                         a specified number of equal percentage bets (e.g.,
                         "3e"). For example, if the current pot is 100 and the
                         effective stack is 400, "2e" would result in a bet of
-                        100. If the number before "e" is omitted, the number of
-                        remaining streets is used (flop=3, turn=2, river=1). You
-                        can also specify a maximum percentage limit by adding a
-                        number after the "e" (e.g., "2e200").
+                        100. If the number before the "e" is omitted, the number
+                        of remaining streets is used (flop=3, turn=2, river=1).
+                        For raises, the number of previous raises is subtracted
+                        from the specified number. For example, "3e" will change
+                        to "2e" on re-raises. You can also specify a maximum
+                        percentage limit by adding a number after the "e" (e.g.,
+                        "2e200").
                       </li>
                     </ul>
                   </div>

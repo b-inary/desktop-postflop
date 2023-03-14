@@ -155,7 +155,7 @@
           />
         </span>
         <span class="pl-3">
-          Memory usage:
+          RAM usage:
           {{
             ["-", "60MB", "60MB", "190MB", "3.5GB"][
               numCombos.filter((x) => x > 0).length
