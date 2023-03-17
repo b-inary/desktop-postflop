@@ -1,6 +1,6 @@
 [package]
 name = "desktop-postflop"
-version = "0.2.5"
+version = "0.2.6"
 description = "The most advanced open-source GTO solver"
 authors = ["Wataru Inariba"]
 license = "AGPL-3.0-or-later"

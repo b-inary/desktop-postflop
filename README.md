@@ -33,12 +33,13 @@ See the [WASM Postflop repository] for more detailed comparisons, including some
 - OS
   - Windows: 10/11
   - macOS: 11.7 and later
-    - We do not distribute macOS builds because we are not enrolled in the Apple Developer Program and cannot sign the app.
+    - We do not distribute macOS builds because we are not enrolled in the Apple Developer Program and cannot sign the app (please see the "Build" section below and build it yourself).
   - Linux: glibc 2.31 and later (e.g., Ubuntu 20.04 and later)
 - CPU
   - x86-64: must support AVX2 instructions
     - Intel: Haswell (2013) and later
     - AMD: Zen (1st gen; 2017) and later
+    - If you have a CPU without AVX2 support, you can modify `src-tauri/.cargo/config.toml` and build it yourself.
   - Apple silicon: M1 and later
 
 ## Download
@@ -99,10 +100,10 @@ If you want to use stable Rust instead of nightly Rust, please modify the follow
 ## Roadmap (in order of priority)
 
 - Results saving/loading feature ([#8](https://github.com/b-inary/desktop-postflop/issues/8))
-- Short deck and FLHE support
 - Hand filter feature for the result viewer ([#6](https://github.com/b-inary/desktop-postflop/issues/6))
-- Aggregated reporting feature for multiple flops
 - Node-locking feature
+- Short deck support
+- Aggregated reporting feature for multiple flops
 - GTO training mode ([#9](https://github.com/b-inary/desktop-postflop/issues/9))
 
 ## License
