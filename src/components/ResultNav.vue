@@ -452,7 +452,7 @@ const selectSpot = async (
         .slice(1, riverIndex)
         .map((spot) => spot.selectedIndex);
       await invokes.gameApplyHistory(history);
-      const possibleCards = await invokes.gamePossibleCards([]);
+      const possibleCards = await invokes.gamePossibleCards();
       for (let i = 0; i < 52; ++i) {
         const isDead = !(possibleCards & (1n << BigInt(i)));
         riverSpot.cards[i].isDead = isDead;
@@ -670,7 +670,7 @@ const spliceSpotsChance = async (spotIndex: number) => {
 
   let possibleCards = 0n;
   if (!(turnSpot?.type === "chance" && turnSpot.selectedIndex === -1)) {
-    possibleCards = await invokes.gamePossibleCards(append);
+    possibleCards = await invokes.gamePossibleCards();
   }
 
   append.push(-1);

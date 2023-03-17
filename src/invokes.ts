@@ -283,8 +283,8 @@ export const gameActionsAfter = async (append: number[]): Promise<string[]> => {
   return await invoke("game_actions_after", { append });
 };
 
-export const gamePossibleCards = async (append: number[]): Promise<bigint> => {
-  return BigInt(await invoke("game_possible_cards", { append }));
+export const gamePossibleCards = async (): Promise<bigint> => {
+  return BigInt(await invoke("game_possible_cards"));
 };
 
 type ResultsResponse = {

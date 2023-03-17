@@ -310,21 +310,9 @@ pub fn game_actions_after(
 }
 
 #[tauri::command]
-pub fn game_possible_cards(
-    game_state: tauri::State<Mutex<PostFlopGame>>,
-    append: Vec<isize>,
-) -> u64 {
-    let mut game = game_state.lock().unwrap();
-    if append.is_empty() {
-        return game.possible_cards();
-    }
-    let history = game.history().to_vec();
-    for &action in &append {
-        game.play(action_usize(action));
-    }
-    let ret = game.possible_cards();
-    game.apply_history(&history);
-    ret
+pub fn game_possible_cards(game_state: tauri::State<Mutex<PostFlopGame>>) -> u64 {
+    let game = game_state.lock().unwrap();
+    game.possible_cards()
 }
 
 fn current_player(game: &PostFlopGame) -> String {
