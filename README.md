@@ -84,6 +84,8 @@ $ npm install
 $ npm run tauri build
 ```
 
+If the build was successful, you should be able to find the application in the `src-tauri/target/release/bundle/` directory.
+
 If you want to use stable Rust instead of nightly Rust, please modify the following line in `src-tauri/Cargo.toml` (performance will be sacrificed):
 
 ```diff
