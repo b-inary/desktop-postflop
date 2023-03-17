@@ -23,11 +23,9 @@ jobs:
           node-version: 18
 
       - name: Setup Rust nightly
-        uses: actions-rs/toolchain@v1
+        uses: dtolnay/rust-toolchain@nightly
         with:
-          toolchain: nightly
           components: rust-src
-          default: true
 
       - name: Install dependencies (Linux)
         if: matrix.platform == 'ubuntu-20.04'
