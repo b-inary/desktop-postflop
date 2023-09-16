@@ -18,9 +18,7 @@
       @focus="($event.target as HTMLInputElement).select()"
       @change="onBoardTextChange"
     />
-    <button class="button-base button-blue" @click="clearBoard">
-      Clear
-    </button>
+    <button class="button-base button-blue" @click="clearBoard">Clear</button>
     <button class="button-base button-blue" @click="generateRandomBoard">
       Random Flop
     </button>
@@ -42,7 +40,7 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useConfigStore } from "../store";
-import { cardText, parseCardString, ranks, suitLetters } from "../utils";
+import { cardText, parseCardString } from "../utils";
 import BoardSelectorCard from "./BoardSelectorCard.vue";
 
 const config = useConfigStore();
@@ -65,29 +63,29 @@ const setBoardTextFromButtons = () => {
   const cards = config.board
     .map(cardText)
     .map(({ rank, suitLetter }) => rank + suitLetter)
-    .join(', ');
+    .join(", ");
   boardText.value = cards;
-}
+};
 
 const onBoardTextChange = () => {
   config.board = [];
 
   const cardIds = boardText.value
     // Allow pasting in things like [Ah Kd Qc], by reformatting to Ah,Kd,Qc
-    .replace(/[^a-zA-Z0-9\s,]/g, '')
-    .replace(/\s+/g, ',')
-    .split(',')
-    .map(s => s.trim())
+    .replace(/[^a-zA-Z0-9\s,]/g, "")
+    .replace(/\s+/g, ",")
+    .split(",")
+    .map((s) => s.trim())
     .map(parseCardString)
-    .filter(cardId => Number.isInteger(cardId));
+    .filter((cardId) => Number.isInteger(cardId));
 
-  new Set(cardIds).forEach(cardId => toggleCard(cardId!));
-}
+  new Set(cardIds).forEach((cardId) => toggleCard(cardId as number));
+};
 
 const clearBoard = () => {
   config.board = [];
   setBoardTextFromButtons();
-}
+};
 
 const generateRandomBoard = () => {
   config.board = [];

@@ -46,7 +46,10 @@ export const cardId = (rank: number, suit: number) => {
 };
 
 export const parseCardString = (text: string) => {
-  const pattern = new RegExp(`^([${ranks.join(' ')}])([${suitLetters.join(' ')}])$`, 'i');
+  const pattern = new RegExp(
+    `^([${ranks.join(" ")}])([${suitLetters.join(" ")}])$`,
+    "i"
+  );
   const match = text.match(pattern);
   if (!match) return null;
 
