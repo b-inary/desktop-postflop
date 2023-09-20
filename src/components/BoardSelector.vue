@@ -38,7 +38,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useConfigStore } from "../store";
 import { cardText, parseCardString } from "../utils";
 import BoardSelectorCard from "./BoardSelectorCard.vue";
@@ -46,7 +46,13 @@ import BoardSelectorCard from "./BoardSelectorCard.vue";
 const config = useConfigStore();
 const boardText = ref("");
 
-const toggleCard = (cardId: number, updateText = true) => {
+watch(
+  () => config.board,
+  () => setBoardTextFromButtons(),
+  { deep: true }
+);
+
+const toggleCard = (cardId: number) => {
   if (config.board.includes(cardId)) {
     config.board = config.board.filter((card) => card !== cardId);
   } else if (config.board.length < 5) {
@@ -54,10 +60,6 @@ const toggleCard = (cardId: number, updateText = true) => {
     if (config.board.length <= 3) {
       config.board.sort((a, b) => b - a);
     }
-  }
-
-  if (updateText) {
-    setBoardTextFromButtons();
   }
 };
 
@@ -80,13 +82,11 @@ const onBoardTextChange = () => {
     .map(parseCardString)
     .filter((cardId): cardId is number => cardId !== null);
 
-  new Set(cardIds).forEach((cardId) => toggleCard(cardId, false));
-  setBoardTextFromButtons();
+  new Set(cardIds).forEach((cardId) => toggleCard(cardId));
 };
 
 const clearBoard = () => {
   config.board = [];
-  setBoardTextFromButtons();
 };
 
 const generateRandomBoard = () => {
@@ -100,6 +100,5 @@ const generateRandomBoard = () => {
   }
 
   config.board.sort((a, b) => b - a);
-  setBoardTextFromButtons();
 };
 </script>

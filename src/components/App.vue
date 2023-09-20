@@ -24,6 +24,9 @@
           </div>
         </div>
 
+        <div v-show="store.sideView === 'hand-importer'">
+          <HandImporter />
+        </div>
         <div v-show="store.sideView === 'oop-range'">
           <RangeEditor :player="0" />
         </div>
@@ -70,6 +73,7 @@ import BunchingEffect from "./BunchingEffect.vue";
 import RunSolver from "./RunSolver.vue";
 import AboutPage from "./AboutPage.vue";
 import ResultViewer from "./ResultViewer.vue";
+import HandImporter from "./HandImporter.vue";
 
 const store = useStore();
 const header = computed(() => store.headers[store.sideView].join(" > "));

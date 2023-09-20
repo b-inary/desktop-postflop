@@ -202,7 +202,8 @@
 <script setup lang="ts">
 import { ref } from "vue";
 import { useStore, useConfigStore } from "../store";
-import { trimRegex, rangeRegex, cardText } from "../utils";
+import { cardText } from "../utils";
+import { trimRegex, rangeRegex } from "../range-utils";
 import * as invokes from "../invokes";
 
 import RangeEditor from "./RangeEditor.vue";

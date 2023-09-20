@@ -1,3 +1,8 @@
+// TODO clean up types with generitc type and casts
+export type Validation<Contents = {}> =
+  | ({ success: true } & Contents)
+  | { success: false; error: string };
+
 export const ranks = [
   "2",
   "3",
@@ -25,6 +30,12 @@ export const trimRegex = /\s*([-:,])\s*/g;
 export const rangeRegex = new RegExp(
   `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
 );
+
+/** TODO use this everywhere instead of num */
+export enum Position {
+  OOP = 0,
+  IP = 1,
+}
 
 const suitClasses = [
   "text-green-600",
