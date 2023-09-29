@@ -6,20 +6,20 @@ authors = ["Wataru Inariba"]
 license = "AGPL-3.0-or-later"
 repository = "https://github.com/b-inary/desktop-postflop/tree/main/src-tauri"
 edition = "2021"
-rust-version = "1.59"
+rust-version = "1.65"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [build-dependencies]
-tauri-build = { version = "1.3.0", features = [] }
+tauri-build = { version = "1.4.1", features = [] }
 
 [dependencies]
-serde_json = "1.0"
-serde = { version = "1.0", features = ["derive"] }
-tauri = { version = "1.3.0", features = ["dialog-open", "dialog-save", "fs-read-file", "fs-write-file", "shell-open"] }
+serde_json = "1.0.107"
+serde = { version = "1.0.188", features = ["derive"] }
+tauri = { version = "1.5.0", features = ["dialog-open", "dialog-save", "fs-read-file", "fs-write-file", "shell-open"] }
 postflop-solver = { git = "https://github.com/b-inary/postflop-solver", features = ["custom-alloc"] }
-rayon = "1.7.0"
-sysinfo = "0.28.4"
+rayon = "1.8.0"
+sysinfo = "0.29.10"
 
 [features]
 # by default Tauri runs in production mode
