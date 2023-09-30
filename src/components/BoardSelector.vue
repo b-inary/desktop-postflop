@@ -11,9 +11,14 @@
   </div>
 
   <div class="flex mt-4 mx-1 gap-3">
-    <button class="button-base button-blue" @click="config.board = []">
-      Clear
-    </button>
+    <input
+      v-model="boardText"
+      type="text"
+      class="px-2 py-1 rounded-lg text-sm"
+      @focus="($event.target as HTMLInputElement).select()"
+      @change="onBoardTextChange"
+    />
+    <button class="button-base button-blue" @click="clearBoard">Clear</button>
     <button class="button-base button-blue" @click="generateRandomBoard">
       Random Flop
     </button>
@@ -33,10 +38,13 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from "vue";
 import { useConfigStore } from "../store";
+import { cardText, parseCardString } from "../utils";
 import BoardSelectorCard from "./BoardSelectorCard.vue";
 
 const config = useConfigStore();
+const boardText = ref("");
 
 const toggleCard = (cardId: number) => {
   if (config.board.includes(cardId)) {
@@ -47,6 +55,36 @@ const toggleCard = (cardId: number) => {
       config.board.sort((a, b) => b - a);
     }
   }
+
+  setBoardTextFromButtons();
+};
+
+const setBoardTextFromButtons = () => {
+  const cards = config.board
+    .map(cardText)
+    .map(({ rank, suitLetter }) => rank + suitLetter)
+    .join(", ");
+  boardText.value = cards;
+};
+
+const onBoardTextChange = () => {
+  config.board = [];
+
+  const cardIds = boardText.value
+    // Allow pasting in things like [Ah Kd Qc], by reformatting to Ah,Kd,Qc
+    .replace(/[^a-zA-Z0-9\s,]/g, "")
+    .replace(/\s+/g, ",")
+    .split(",")
+    .map((s) => s.trim())
+    .map(parseCardString)
+    .filter((cardId) => Number.isInteger(cardId));
+
+  new Set(cardIds).forEach((cardId) => toggleCard(cardId as number));
+};
+
+const clearBoard = () => {
+  config.board = [];
+  setBoardTextFromButtons();
 };
 
 const generateRandomBoard = () => {
@@ -60,5 +98,8 @@ const generateRandomBoard = () => {
   }
 
   config.board.sort((a, b) => b - a);
+  setBoardTextFromButtons();
 };
+
+setBoardTextFromButtons();
 </script>
