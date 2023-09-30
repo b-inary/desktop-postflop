@@ -2,10 +2,14 @@
   <div v-if="editingPlayer === -1">
     <div class="flex">
       <div
-        class="px-3 py-1 text-cyan-600 bg-cyan-50 border-2 border-cyan-600 rounded-md font-semibold"
+        class="flex pl-2.5 pr-3 py-1 text-cyan-600 bg-cyan-50 border-2 border-cyan-600 rounded-md font-semibold"
       >
-        Enabling the bunching effect will significantly slow down the solver.<br />
-        If you are not sure, we recommend leaving it disabled.
+        <InformationCircleIcon class="inline w-5 h-5 mt-[0.1875rem] mr-1.5" />
+        <div>
+          Enabling the bunching effect will significantly slow down the
+          solver.<br />
+          If you are not sure, we recommend leaving it disabled.
+        </div>
       </div>
     </div>
 
@@ -204,7 +208,10 @@ import * as invokes from "../invokes";
 import RangeEditor from "./RangeEditor.vue";
 import RangeMiniViewer from "./RangeMiniViewer.vue";
 import { Tippy } from "vue-tippy";
-import { QuestionMarkCircleIcon } from "@heroicons/vue/20/solid";
+import {
+  InformationCircleIcon,
+  QuestionMarkCircleIcon,
+} from "@heroicons/vue/20/solid";
 
 const store = useStore();
 const configStore = useConfigStore();

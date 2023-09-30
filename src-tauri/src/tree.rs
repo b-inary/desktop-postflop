@@ -122,25 +122,24 @@ pub fn tree_new(
         rake_rate: 0.0,
         rake_cap: 0.0,
         flop_bet_sizes: [
-            BetSizeCandidates::try_from((oop_flop_bet.as_str(), oop_flop_raise.as_str())).unwrap(),
-            BetSizeCandidates::try_from((ip_flop_bet.as_str(), ip_flop_raise.as_str())).unwrap(),
+            BetSizeOptions::try_from((oop_flop_bet.as_str(), oop_flop_raise.as_str())).unwrap(),
+            BetSizeOptions::try_from((ip_flop_bet.as_str(), ip_flop_raise.as_str())).unwrap(),
         ],
         turn_bet_sizes: [
-            BetSizeCandidates::try_from((oop_turn_bet.as_str(), oop_turn_raise.as_str())).unwrap(),
-            BetSizeCandidates::try_from((ip_turn_bet.as_str(), ip_turn_raise.as_str())).unwrap(),
+            BetSizeOptions::try_from((oop_turn_bet.as_str(), oop_turn_raise.as_str())).unwrap(),
+            BetSizeOptions::try_from((ip_turn_bet.as_str(), ip_turn_raise.as_str())).unwrap(),
         ],
         river_bet_sizes: [
-            BetSizeCandidates::try_from((oop_river_bet.as_str(), oop_river_raise.as_str()))
-                .unwrap(),
-            BetSizeCandidates::try_from((ip_river_bet.as_str(), ip_river_raise.as_str())).unwrap(),
+            BetSizeOptions::try_from((oop_river_bet.as_str(), oop_river_raise.as_str())).unwrap(),
+            BetSizeOptions::try_from((ip_river_bet.as_str(), ip_river_raise.as_str())).unwrap(),
         ],
         turn_donk_sizes: match donk_option {
             false => None,
-            true => DonkSizeCandidates::try_from(oop_turn_donk.as_str()).ok(),
+            true => DonkSizeOptions::try_from(oop_turn_donk.as_str()).ok(),
         },
         river_donk_sizes: match donk_option {
             false => None,
-            true => DonkSizeCandidates::try_from(oop_river_donk.as_str()).ok(),
+            true => DonkSizeOptions::try_from(oop_river_donk.as_str()).ok(),
         },
         add_allin_threshold,
         force_allin_threshold,

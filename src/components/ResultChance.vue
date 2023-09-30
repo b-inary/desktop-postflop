@@ -51,7 +51,7 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from "vue";
-import { cardId, ranks, suits, toFixed1, toFixedAdaptive } from "../utils";
+import { ranks, suits, cardId, toFixed1, toFixedAdaptive } from "../utils";
 import {
   ChanceReports,
   Spot,

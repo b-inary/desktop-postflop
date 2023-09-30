@@ -14,7 +14,7 @@
     <input
       v-model="boardText"
       type="text"
-      class="px-2 py-1 rounded-lg text-sm"
+      class="w-40 px-2 py-1 rounded-lg text-sm"
       @focus="($event.target as HTMLInputElement).select()"
       @change="onBoardTextChange"
     />
