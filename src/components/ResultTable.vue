@@ -350,13 +350,13 @@ import { computed, reactive, ref, toRefs, watch } from "vue";
 
 import {
   ranks,
+  suitLetters,
   cardText,
   cardPairOrder,
   toFixed1,
   toFixed,
   toFixedAdaptive,
   capitalize,
-  suitLetters,
 } from "../utils";
 
 import {

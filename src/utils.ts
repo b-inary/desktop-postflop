@@ -20,6 +20,7 @@ export const suitLetters = ["c", "d", "h", "s"];
 const rankPat = "[AaKkQqJjTt2-9]";
 const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
 const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
+const cardRegex = new RegExp(`^(${rankPat})([cdhs])$`);
 export const trimRegex = /\s*([-:,])\s*/g;
 export const rangeRegex = new RegExp(
   `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
@@ -46,15 +47,11 @@ export const cardId = (rank: number, suit: number) => {
 };
 
 export const parseCardString = (text: string) => {
-  const pattern = new RegExp(
-    `^([${ranks.join(" ")}])([${suitLetters.join(" ")}])$`,
-    "i"
-  );
-  const match = text.match(pattern);
+  const match = text.match(cardRegex);
   if (!match) return null;
 
   const rank = ranks.indexOf(match[1].toUpperCase());
-  const suit = suitLetters.indexOf(match[2].toLowerCase());
+  const suit = suitLetters.indexOf(match[2]);
   return cardId(rank, suit);
 };
 

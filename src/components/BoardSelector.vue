@@ -46,7 +46,7 @@ import BoardSelectorCard from "./BoardSelectorCard.vue";
 const config = useConfigStore();
 const boardText = ref("");
 
-const toggleCard = (cardId: number) => {
+const toggleCard = (cardId: number, updateText = true) => {
   if (config.board.includes(cardId)) {
     config.board = config.board.filter((card) => card !== cardId);
   } else if (config.board.length < 5) {
@@ -56,15 +56,16 @@ const toggleCard = (cardId: number) => {
     }
   }
 
-  setBoardTextFromButtons();
+  if (updateText) {
+    setBoardTextFromButtons();
+  }
 };
 
 const setBoardTextFromButtons = () => {
-  const cards = config.board
+  boardText.value = config.board
     .map(cardText)
     .map(({ rank, suitLetter }) => rank + suitLetter)
     .join(", ");
-  boardText.value = cards;
 };
 
 const onBoardTextChange = () => {
@@ -72,14 +73,15 @@ const onBoardTextChange = () => {
 
   const cardIds = boardText.value
     // Allow pasting in things like [Ah Kd Qc], by reformatting to Ah,Kd,Qc
-    .replace(/[^a-zA-Z0-9\s,]/g, "")
+    .trim()
+    .replace(/[^A-Za-z0-9\s,]/g, "")
     .replace(/\s+/g, ",")
     .split(",")
-    .map((s) => s.trim())
     .map(parseCardString)
-    .filter((cardId) => Number.isInteger(cardId));
+    .filter((cardId): cardId is number => cardId !== null);
 
-  new Set(cardIds).forEach((cardId) => toggleCard(cardId as number));
+  new Set(cardIds).forEach((cardId) => toggleCard(cardId, false));
+  setBoardTextFromButtons();
 };
 
 const clearBoard = () => {
@@ -100,6 +102,4 @@ const generateRandomBoard = () => {
   config.board.sort((a, b) => b - a);
   setBoardTextFromButtons();
 };
-
-setBoardTextFromButtons();
 </script>
