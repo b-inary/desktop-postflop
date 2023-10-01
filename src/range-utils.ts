@@ -1,4 +1,4 @@
-import { Position, Validation, trimRegex, comboPat } from "./utils";
+import { Position, Result, trimRegex, comboPat } from "./utils";
 import * as invokes from "./invokes";
 import { useStore } from "./store";
 
@@ -15,7 +15,7 @@ const trimRange = (rangeString: string) =>
 export const validateRange = (
   rangeString: any,
   keyForError = "range"
-): Validation => {
+): Result => {
   if (typeof rangeString !== "string")
     return {
       success: false,
@@ -43,7 +43,7 @@ export const setRange = async (
   player: Position,
   rangeString: string,
   store: Store
-): Promise<Validation> => {
+): Promise<Result> => {
   const trimmed = rangeString.replace(trimRegex, "$1").trim();
   const validation = validateRange(rangeString);
   if (!validation.success) return validation;

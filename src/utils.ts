@@ -1,5 +1,4 @@
-// TODO clean up types with generitc type and casts
-export type Validation<Contents = {}> =
+export type Result<Contents = {}> =
   | ({ success: true } & Contents)
   | { success: false; error: string };
 

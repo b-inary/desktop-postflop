@@ -26,7 +26,7 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { Config, configKeys, useConfigStore, useStore } from "../store";
-import { cardText, parseCardString, Position, Validation } from "../utils";
+import { cardText, parseCardString, Position, Result } from "../utils";
 import { setRange, validateRange } from "../range-utils";
 import * as invokes from "../invokes";
 
@@ -86,7 +86,7 @@ const onImportTextChanged = () => {
   validateImportTextAndDisplayError();
 };
 
-const validateConfigPrimitives = (importConfig: any): Validation => {
+const validateConfigPrimitives = (importConfig: any): Result => {
   if (typeof importConfig !== "object")
     return {
       success: false,
@@ -110,13 +110,12 @@ const validateConfigPrimitives = (importConfig: any): Validation => {
   return { success: true };
 };
 
-const validateBoard = (board: any): Validation => {
+const validateBoard = (board: any): Result => {
   if (!Array.isArray(board))
     return { success: false, error: INVALID_BOARD_ERROR };
-  const boardArr = board as any[];
 
-  for (const i in boardArr) {
-    const card = boardArr[i];
+  for (const i in board) {
+    const card = board[i];
     if (typeof card !== "string") {
       return { success: false, error: INVALID_BOARD_ERROR };
     }
@@ -132,7 +131,7 @@ const validateBoard = (board: any): Validation => {
 
 const parseJson = (
   json: string
-): Validation<{ json?: NonValidatedHandJSON }> => {
+): Result<{ json?: NonValidatedHandJSON }> => {
   try {
     return { success: true, json: JSON.parse(json) };
   } catch (e) {
@@ -141,7 +140,7 @@ const parseJson = (
   }
 };
 
-const validateImportTextAndDisplayError = (): Validation<{
+const validateImportTextAndDisplayError = (): Result<{
   json?: HandJSON;
 }> => {
   importTextError.value = "";
@@ -153,7 +152,7 @@ const validateImportTextAndDisplayError = (): Validation<{
   return validation;
 };
 
-const validateImportText = (): Validation<{ json?: HandJSON }> => {
+const validateImportText = (): Result<{ json?: HandJSON }> => {
   const parseValidation = parseJson(importText.value);
   if (!parseValidation.success) return parseValidation;
 
@@ -161,7 +160,7 @@ const validateImportText = (): Validation<{ json?: HandJSON }> => {
   if (typeof importJson !== "object")
     return { success: false, error: "Not a valid JSON object" };
 
-  const validateFns: (() => Validation)[] = [
+  const validateFns: (() => Result)[] = [
     () => validateConfigPrimitives(config),
     () => validateBoard(importJson.config?.board),
     () => validateRange(importJson.oopRange, "oopRange"),
