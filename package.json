@@ -1,7 +1,7 @@
 {
   "name": "desktop-postflop",
   "private": true,
-  "version": "0.2.6",
+  "version": "0.2.7",
   "type": "module",
   "license": "AGPL-3.0-or-later",
   "scripts": {
@@ -22,7 +22,7 @@
     "vue-tippy": "^6.3.1"
   },
   "devDependencies": {
-    "@rushstack/eslint-patch": "^1.5.0",
+    "@rushstack/eslint-patch": "^1.5.1",
     "@tailwindcss/forms": "^0.5.6",
     "@tauri-apps/cli": "^1.5.0",
     "@types/node": "^20.8.0",
