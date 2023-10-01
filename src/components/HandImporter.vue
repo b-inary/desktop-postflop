@@ -77,6 +77,8 @@ const generateImportText = async () => {
   };
 
   importText.value = JSON.stringify(importObj, null, 2);
+  importTextError.value = '';
+  importDoneText.value = '';
 };
 
 const onImportTextChanged = () => {
