@@ -93,17 +93,22 @@ const validateConfigPrimitives = (importConfig: any): Result => {
       error: `Expected '.config' to be an object but got ${typeof importConfig}`,
     };
 
-  for (const key of configKeys) {
+  for (const key of configKeys.concat(Object.keys(importConfig))) {
     const newValue = importConfig[key];
     const existingValue = (config as any)[key];
-    if (existingValue === null || existingValue === undefined) continue;
+    console.log({ key, existingValue, newValue })
+
+    if (existingValue === undefined) {
+      return { success: false, error: `Unexpected key '.config.${key}'` };
+    }
+
     if (typeof existingValue === typeof newValue) continue;
 
     if (key === "board") return { success: false, error: INVALID_BOARD_ERROR };
     else
       return {
         success: false,
-        error: `Expected '.config.${key}' to be ${typeof importConfig} but got ${typeof newValue}`,
+        error: `Expected '.config.${key}' to be ${typeof existingValue} but got ${typeof newValue}`,
       };
   }
 
@@ -161,7 +166,7 @@ const validateImportText = (): Result<{ json?: HandJSON }> => {
     return { success: false, error: "Not a valid JSON object" };
 
   const validateFns: (() => Result)[] = [
-    () => validateConfigPrimitives(config),
+    () => validateConfigPrimitives(importJson.config),
     () => validateBoard(importJson.config?.board),
     () => validateRange(importJson.oopRange, "oopRange"),
     () => validateRange(importJson.ipRange, "ipRange"),
