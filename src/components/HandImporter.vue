@@ -2,7 +2,7 @@
   <div class="mt-1 w-[52rem]">
     <textarea
       v-model="importText"
-      class="block w-full h-[36rem] px-2 py-1 rounded-lg textarea text-sm font-mono"
+      :class='"block w-full h-[36rem] px-2 py-1 rounded-lg textarea text-sm font-mono " + (importTextError ? "textarea-error" : "")'
       @change="onImportTextChanged"
       spellcheck="false"
     />
