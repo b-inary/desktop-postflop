@@ -357,9 +357,9 @@ const existingAmounts = computed(() => {
   return ret;
 });
 
-const addedLines = ref(config.addedLines);
-const removedLines = ref(config.removedLines);
-const invalidLines = ref("");
+const addedLines = ref(await invokes.treeAddedLines());
+const removedLines = ref(await invokes.treeRemovedLines());
+const invalidLines = ref(await invokes.treeInvalidTerminals());
 
 const addedLinesArray = computed(() =>
   addedLines.value === ""

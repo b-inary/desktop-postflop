@@ -746,6 +746,7 @@ import { useStore, useConfigStore } from "../store";
 import {
   MAX_AMOUNT,
   sanitizeBetString,
+  ROOT_LINE_STRING,
   INVALID_LINE_STRING,
   readableLineString,
 } from "../utils";
@@ -904,7 +905,9 @@ const warningMisc = computed(() => {
 const errorLines = computed(() => {
   const errors: string[] = [];
   if (
+    addedLinesArray.value.includes(ROOT_LINE_STRING) ||
     addedLinesArray.value.includes(INVALID_LINE_STRING) ||
+    removedLinesArray.value.includes(ROOT_LINE_STRING) ||
     removedLinesArray.value.includes(INVALID_LINE_STRING)
   ) {
     errors.push("Invalid line found (loaded broken configurations?)");
