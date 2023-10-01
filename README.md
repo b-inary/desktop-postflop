@@ -1,5 +1,12 @@
 # Desktop Postflop
 
+> [!IMPORTANT]
+> **As of October 2023, I have started developing a poker solver as a business and have decided to suspend development of this open-source project. See [this issue] for more information.**
+
+[this issue]: https://github.com/b-inary/postflop-solver/issues/46
+
+---
+
 **Desktop Postflop** is a free, open-source GTO solver for Texas hold'em poker.
 
 This is a port of [WASM Postflop] to a native desktop application using the [Tauri] framework.
@@ -99,7 +106,7 @@ If you want to use stable Rust instead of nightly Rust, please modify the follow
 [Node.js]: https://nodejs.org/en/
 [Tauri documentation]: https://tauri.app/v1/guides/getting-started/prerequisites/#setting-up-linux
 
-## Roadmap (in order of priority)
+## ~~Roadmap (in order of priority)~~
 
 - Results saving/loading feature ([#8](https://github.com/b-inary/desktop-postflop/issues/8))
 - Hand filter feature for the result viewer ([#6](https://github.com/b-inary/desktop-postflop/issues/6))
