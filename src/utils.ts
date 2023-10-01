@@ -22,14 +22,10 @@ export const ranks = [
 export const suits = ["♣", "♦", "♥", "♠"];
 export const suitLetters = ["c", "d", "h", "s"];
 
-const rankPat = "[AaKkQqJjTt2-9]";
-const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
-const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
-const cardRegex = new RegExp(`^(${rankPat})([cdhs])$`);
+export const rankPat = "[AaKkQqJjTt2-9]";
+export const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
+export const cardRegex = new RegExp(`^(${rankPat})([cdhs])$`);
 export const trimRegex = /\s*([-:,])\s*/g;
-export const rangeRegex = new RegExp(
-  `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
-);
 
 /** TODO use this everywhere instead of num */
 export enum Position {

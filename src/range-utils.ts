@@ -1,13 +1,10 @@
-import { Position, Validation } from "./utils";
+import { Position, Validation, trimRegex, comboPat } from "./utils";
 import * as invokes from "./invokes";
 import { useStore } from "./store";
 
 type Store = ReturnType<typeof useStore>;
 
-const rankPat = "[AaKkQqJjTt2-9]";
-const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
-const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
-export const trimRegex = /\s*([-:,])\s*/g;
+export const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
 export const rangeRegex = new RegExp(
   `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
 );
