@@ -39,6 +39,8 @@ type HandJSON = {
 
 const INVALID_BOARD_ERROR = `Invalid '.config.board'. Set board cards manually for an example.`;
 
+const CONFIG_INPUT_KEYS = configKeys.filter(k => ['expectedBoardLength'].indexOf(k) === -1);
+
 const config = useConfigStore();
 const store = useStore();
 
@@ -60,7 +62,7 @@ watch(
 const generateImportText = async () => {
   const configObj = Object.fromEntries(
     Object.entries(config).filter(
-      ([key, _value]) => configKeys.indexOf(key) !== -1
+      ([key, _value]) => CONFIG_INPUT_KEYS.indexOf(key) !== -1
     )
   );
 
@@ -93,10 +95,9 @@ const validateConfigPrimitives = (importConfig: any): Result => {
       error: `Expected '.config' to be an object but got ${typeof importConfig}`,
     };
 
-  for (const key of configKeys.concat(Object.keys(importConfig))) {
+  for (const key of CONFIG_INPUT_KEYS.concat(Object.keys(importConfig))) {
     const newValue = importConfig[key];
     const existingValue = (config as any)[key];
-    console.log({ key, existingValue, newValue })
 
     if (existingValue === undefined) {
       return { success: false, error: `Unexpected key '.config.${key}'` };
@@ -129,6 +130,10 @@ const validateBoard = (board: any): Result => {
     if (parsedCard === null) {
       return { success: false, error: INVALID_BOARD_ERROR };
     }
+  }
+
+  if (board.length > 5) {
+    return { success: false, error: 'Board cannot have more than 5 cards' };
   }
 
   return { success: true };
@@ -177,6 +182,7 @@ const validateImportText = (): Result<{ json?: HandJSON }> => {
   }
 
   importJson.config.board = importJson.config.board.map(parseCardString);
+  importJson.config.expectedBoardLength = importJson.config.board.length;
 
   return { success: true, json: importJson as HandJSON };
 };
