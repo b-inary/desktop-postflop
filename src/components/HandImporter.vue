@@ -2,7 +2,10 @@
   <div class="mt-1 w-[52rem]">
     <textarea
       v-model="importText"
-      :class='"block w-full h-[36rem] px-2 py-1 rounded-lg textarea text-sm font-mono " + (importTextError ? "textarea-error" : "")'
+      :class="
+        'block w-full h-[36rem] px-2 py-1 rounded-lg textarea text-sm font-mono ' +
+        (importTextError ? 'textarea-error' : '')
+      "
       @change="onImportTextChanged"
       spellcheck="false"
     />
@@ -13,7 +16,7 @@
       </button>
       <span v-if="importDoneText" class="mt-1">{{ importDoneText }}</span>
       <span v-if="importTextError" class="mt-1 text-red-500">
-        {{ 'Error: ' + importTextError }}
+        {{ "Error: " + importTextError }}
       </span>
     </div>
 
@@ -26,11 +29,18 @@
 <script setup lang="ts">
 import { ref, watch } from "vue";
 import { Config, configKeys, useConfigStore, useStore } from "../store";
-import { cardText, parseCardString, Position, Result } from "../utils";
+import {
+  cardText,
+  getExpectedBoardLength,
+  parseCardString,
+  Position,
+  Result,
+} from "../utils";
 import { setRange, validateRange } from "../range-utils";
 import * as invokes from "../invokes";
 
-type NonValidatedHandJSON = Record<string, any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type NonValidatedHandJSON = any;
 type HandJSON = {
   oopRange: string;
   ipRange: string;
@@ -39,7 +49,9 @@ type HandJSON = {
 
 const INVALID_BOARD_ERROR = `Invalid '.config.board'. Set board cards manually for an example.`;
 
-const CONFIG_INPUT_KEYS = configKeys.filter(k => ['expectedBoardLength'].indexOf(k) === -1);
+const CONFIG_INPUT_KEYS = configKeys.filter(
+  (k) => ["expectedBoardLength"].indexOf(k) === -1
+);
 
 const config = useConfigStore();
 const store = useStore();
@@ -79,8 +91,8 @@ const generateImportText = async () => {
   };
 
   importText.value = JSON.stringify(importObj, null, 2);
-  importTextError.value = '';
-  importDoneText.value = '';
+  importTextError.value = "";
+  importDoneText.value = "";
 };
 
 const onImportTextChanged = () => {
@@ -88,16 +100,17 @@ const onImportTextChanged = () => {
   validateImportTextAndDisplayError();
 };
 
-const validateConfigPrimitives = (importConfig: any): Result => {
-  if (typeof importConfig !== "object")
+const validateConfigPrimitives = (importConfig: unknown): Result => {
+  if (typeof importConfig !== "object" || !importConfig)
     return {
       success: false,
       error: `Expected '.config' to be an object but got ${typeof importConfig}`,
     };
 
   for (const key of CONFIG_INPUT_KEYS.concat(Object.keys(importConfig))) {
-    const newValue = importConfig[key];
-    const existingValue = (config as any)[key];
+    const newValue = (importConfig as Record<string, unknown>)[key];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const existingValue = (config as unknown as Record<string, unknown>)[key];
 
     if (existingValue === undefined) {
       return { success: false, error: `Unexpected key '.config.${key}'` };
@@ -116,7 +129,7 @@ const validateConfigPrimitives = (importConfig: any): Result => {
   return { success: true };
 };
 
-const validateBoard = (board: any): Result => {
+const validateBoard = (board: unknown): Result => {
   if (!Array.isArray(board))
     return { success: false, error: INVALID_BOARD_ERROR };
 
@@ -133,15 +146,13 @@ const validateBoard = (board: any): Result => {
   }
 
   if (board.length > 5) {
-    return { success: false, error: 'Board cannot have more than 5 cards' };
+    return { success: false, error: "Board cannot have more than 5 cards" };
   }
 
   return { success: true };
 };
 
-const parseJson = (
-  json: string
-): Result<{ json?: NonValidatedHandJSON }> => {
+const parseJson = (json: string): Result<{ json?: NonValidatedHandJSON }> => {
   try {
     return { success: true, json: JSON.parse(json) };
   } catch (e) {
@@ -181,8 +192,13 @@ const validateImportText = (): Result<{ json?: HandJSON }> => {
     if (!validation.success) return validation;
   }
 
-  importJson.config.board = importJson.config.board.map(parseCardString);
-  importJson.config.expectedBoardLength = importJson.config.board.length;
+  const cfg = importJson.config;
+  cfg.board = cfg.board.map(parseCardString);
+  cfg.expectedBoardLength = getExpectedBoardLength(
+    cfg.board.length,
+    cfg.addedLines,
+    cfg.removedLines
+  );
 
   return { success: true, json: importJson as HandJSON };
 };
@@ -193,8 +209,8 @@ const importHand = async () => {
   const importJson = validation.json as HandJSON;
 
   for (const key in importJson.config) {
-    const newValue = (importJson.config as Record<string, any>)[key];
-    (config as any)[key] = newValue;
+    const newValue = (importJson.config as Record<string, unknown>)[key];
+    (config as unknown as Record<string, unknown>)[key] = newValue;
   }
 
   await setRange(Position.OOP, importJson.oopRange, store);

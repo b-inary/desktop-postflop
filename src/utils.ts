@@ -1,4 +1,4 @@
-export type Result<Contents = {}> =
+export type Result<Contents = object> =
   | ({ success: true } & Contents)
   | { success: false; error: string };
 
@@ -345,4 +345,13 @@ export const readableLineString = (s: string): string => {
   }
 
   return ret;
+};
+
+export const getExpectedBoardLength = (
+  boardLength: number,
+  addedLines: string,
+  removedLines: string
+) => {
+  if (addedLines === "" && removedLines === "") return 0;
+  return Math.max(boardLength, 3);
 };

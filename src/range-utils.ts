@@ -13,7 +13,7 @@ const trimRange = (rangeString: string) =>
   rangeString.replace(trimRegex, "$1").trim();
 
 export const validateRange = (
-  rangeString: any,
+  rangeString: unknown | string,
   keyForError = "range"
 ): Result => {
   if (typeof rangeString !== "string")
