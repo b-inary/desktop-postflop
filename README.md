@@ -75,9 +75,15 @@ C:\Users\<username>\AppData\Local\b-inary.desktop-postflop
 
 ## Build
 
-[Rust] and [Node.js] need to be installed to build.
-On Linux, you will also need to install some dependencies; please see the [Tauri documentation] for details.
-For better performance, we also recommend installing the Rust nightly channel:
+[Rust] and [Node.js] (see `.nvmrc`) need to be installed to build.
+On Linux, you will also need to install some dependencies; the Tauri
+documentation at the time of writing is not great, but these
+
+```sh
+$ sudo apt-get install pkg-config libcairo2-dev pango1.0-tools libjavascriptcoregtk-4.0-dev libgdk-pixbuf2.0-0 libgtk-3-dev libsoup2.4-dev libwebkit2gtk-4.0-dev librsvg2-bin librsvg2-dev
+```
+
+Install the Rust nightly channel:
 
 ```sh
 $ rustup install nightly
@@ -89,6 +95,12 @@ Then clone this reporitory and run the following commands:
 ```sh
 $ npm install
 $ npm run tauri build
+```
+
+To debug the build process, you can use the command:
+
+```sh
+$ npm run tauri build -- --verbose
 ```
 
 If the build was successful, you should be able to find the application in the `src-tauri/target/release/bundle/` directory.
