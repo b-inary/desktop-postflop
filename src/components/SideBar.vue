@@ -1,19 +1,26 @@
 <template>
   <aside class="flex flex-col shrink-0 w-56 my-4 overflow-y-auto border-r-2">
     <button
+      :class="itemStyle('hand-importer')"
+      @click="store.sideView = 'hand-importer'"
+    >
+      Import / Export
+    </button>
+
+    <button
       :class="itemStyle('oop-range')"
       @click="store.sideView = 'oop-range'"
     >
       OOP Range
       <span class="flex my-2 justify-center">
-        <RangeMiniViewer :player="0" />
+        <RangeMiniViewer :player="Position.OOP" />
       </span>
     </button>
 
     <button :class="itemStyle('ip-range')" @click="store.sideView = 'ip-range'">
       IP Range
       <span class="flex my-2 justify-center">
-        <RangeMiniViewer :player="1" />
+        <RangeMiniViewer :player="Position.IP" />
       </span>
     </button>
 
@@ -59,7 +66,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { SideView, useStore, useConfigStore } from "../store";
-import { cardText } from "../utils";
+import { Position, cardText } from "../utils";
 
 import RangeMiniViewer from "./RangeMiniViewer.vue";
 

@@ -135,9 +135,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
 import { useStore } from "../store";
-import { ranks, trimRegex, rangeRegex } from "../utils";
+import { Position, ranks } from "../utils";
+import { setRange, validateRange } from "../range-utils";
 import * as invokes from "../invokes";
 
 import DbItemPicker from "./DbItemPicker.vue";
@@ -147,7 +148,7 @@ const yellow500 = "#eab308";
 type DraggingMode = "none" | "enabling" | "disabling";
 
 const props = withDefaults(
-  defineProps<{ player: number; defaultText?: string }>(),
+  defineProps<{ player: Position; defaultText?: string }>(),
   { defaultText: "" }
 );
 
@@ -163,6 +164,12 @@ const weight = ref(100);
 const numCombos = ref(0);
 
 let draggingMode: DraggingMode = "none";
+
+watch(
+  () => store.ranges,
+  () => onUpdate(),
+  { deep: true }
+);
 
 const cellText = (row: number, col: number) => {
   const r1 = 13 - Math.min(row, col);
@@ -188,36 +195,22 @@ const update = async (row: number, col: number, weight: number) => {
   const idx = 13 * (row - 1) + col - 1;
   await invokes.rangeUpdate(props.player, row, col, weight / 100);
   store.ranges[props.player][idx] = weight;
-  await onUpdate();
 };
 
 const onRangeTextChange = async () => {
-  const trimmed = rangeText.value.replace(trimRegex, "$1").trim();
-  const ranges = trimmed.split(",");
-
-  if (ranges[ranges.length - 1] === "") {
-    ranges.pop();
+  const validation = validateRange(rangeText.value);
+  if (!validation.success) {
+    rangeTextError.value = `Failed to parse range: ${validation.error}`;
   }
 
-  for (const range of ranges) {
-    if (!rangeRegex.test(range)) {
-      rangeTextError.value = `Failed to parse range: ${
-        range || "(empty string)"
-      }`;
-      return;
-    }
-  }
+  const assignmentValidation = await setRange(
+    props.player,
+    rangeText.value,
+    store
+  );
 
-  const errorString = await invokes.rangeFromString(props.player, trimmed);
-
-  if (errorString) {
-    rangeTextError.value = errorString;
-  } else {
-    const weights = await invokes.rangeGetWeights(props.player);
-    for (let i = 0; i < 13 * 13; ++i) {
-      store.ranges[props.player][i] = weights[i] * 100;
-    }
-    await onUpdate();
+  if (!assignmentValidation.success) {
+    rangeTextError.value = assignmentValidation.error;
   }
 };
 
@@ -263,7 +256,6 @@ const invertRange = async () => {
   for (let i = 0; i < 13 * 13; ++i) {
     store.ranges[props.player][i] = 100 - store.ranges[props.player][i];
   }
-  await onUpdate();
 };
 
 const loadRange = (rangeStr: unknown) => {

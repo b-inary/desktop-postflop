@@ -1,3 +1,7 @@
+export type Result<Contents = object> =
+  | ({ success: true } & Contents)
+  | { success: false; error: string };
+
 export const ranks = [
   "2",
   "3",
@@ -17,14 +21,16 @@ export const ranks = [
 export const suits = ["♣", "♦", "♥", "♠"];
 export const suitLetters = ["c", "d", "h", "s"];
 
-const rankPat = "[AaKkQqJjTt2-9]";
-const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
-const weightPat = "(?:(?:[01](\\.\\d*)?)|(?:\\.\\d+))";
-const cardRegex = new RegExp(`^(${rankPat})([cdhs])$`);
+export const rankPat = "[AaKkQqJjTt2-9]";
+export const comboPat = `(?:(?:${rankPat}{2}[os]?)|(?:(?:${rankPat}[cdhs]){2}))`;
+export const cardRegex = new RegExp(`^(${rankPat})([cdhs])$`);
 export const trimRegex = /\s*([-:,])\s*/g;
-export const rangeRegex = new RegExp(
-  `^(?<range>${comboPat}(?:\\+|(?:-${comboPat}))?)(?::(?<weight>${weightPat}))?$`
-);
+
+/** TODO use this everywhere instead of num */
+export enum Position {
+  OOP = 0,
+  IP = 1,
+}
 
 const suitClasses = [
   "text-green-600",
@@ -339,4 +345,13 @@ export const readableLineString = (s: string): string => {
   }
 
   return ret;
+};
+
+export const getExpectedBoardLength = (
+  boardLength: number,
+  addedLines: string,
+  removedLines: string
+) => {
+  if (addedLines === "" && removedLines === "") return 0;
+  return Math.max(boardLength, 3);
 };

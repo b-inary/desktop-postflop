@@ -749,6 +749,7 @@ import {
   ROOT_LINE_STRING,
   INVALID_LINE_STRING,
   readableLineString,
+  getExpectedBoardLength,
 } from "../utils";
 
 import DbItemPicker from "./DbItemPicker.vue";
@@ -1067,9 +1068,11 @@ const saveEdit = (addedLines: string, removedLines: string) => {
   isEditMode.value = false;
   config.addedLines = addedLines;
   config.removedLines = removedLines;
-  if (config.addedLines === "" && config.removedLines === "") {
-    config.expectedBoardLength = 0;
-  }
+  config.expectedBoardLength = getExpectedBoardLength(
+    config.board.length,
+    addedLines,
+    removedLines
+  );
   store.headers["tree-config"].pop();
 };
 

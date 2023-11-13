@@ -4,6 +4,7 @@ import { sanitizeBetString } from "./utils";
 export type NavView = "solver" | "results";
 
 export type SideView =
+  | "hand-importer"
   | "oop-range"
   | "ip-range"
   | "board"
@@ -11,6 +12,64 @@ export type SideView =
   | "bunching"
   | "run-solver"
   | "about";
+
+export type Config = {
+  board: number[];
+  startingPot: number;
+  effectiveStack: number;
+  rakePercent: number;
+  rakeCap: number;
+  donkOption: boolean;
+  oopFlopBet: string;
+  oopFlopRaise: string;
+  oopTurnBet: string;
+  oopTurnRaise: string;
+  oopTurnDonk: string;
+  oopRiverBet: string;
+  oopRiverRaise: string;
+  oopRiverDonk: string;
+  ipFlopBet: string;
+  ipFlopRaise: string;
+  ipTurnBet: string;
+  ipTurnRaise: string;
+  ipRiverBet: string;
+  ipRiverRaise: string;
+  addAllInThreshold: number;
+  forceAllInThreshold: number;
+  mergingThreshold: number;
+  expectedBoardLength: number;
+  addedLines: string;
+  removedLines: string;
+};
+
+export const configKeys = [
+  "board",
+  "startingPot",
+  "effectiveStack",
+  "rakePercent",
+  "rakeCap",
+  "donkOption",
+  "oopFlopBet",
+  "oopFlopRaise",
+  "oopTurnBet",
+  "oopTurnRaise",
+  "oopTurnDonk",
+  "oopRiverBet",
+  "oopRiverRaise",
+  "oopRiverDonk",
+  "ipFlopBet",
+  "ipFlopRaise",
+  "ipTurnBet",
+  "ipTurnRaise",
+  "ipRiverBet",
+  "ipRiverRaise",
+  "addAllInThreshold",
+  "forceAllInThreshold",
+  "mergingThreshold",
+  "expectedBoardLength",
+  "addedLines",
+  "removedLines",
+];
 
 export const saveConfigTmp = () => {
   const config = useConfigStore();
@@ -86,6 +145,7 @@ export const useStore = defineStore("app", {
     sideView: "oop-range" as SideView,
     headers: {
       about: ["About"],
+      "hand-importer": ["Import / Export"],
       "oop-range": ["OOP Range"],
       "ip-range": ["IP Range"],
       board: ["Board"],
@@ -120,7 +180,7 @@ export const useStore = defineStore("app", {
 });
 
 export const useConfigStore = defineStore("config", {
-  state: () => ({
+  state: (): Config => ({
     board: [] as number[],
     startingPot: 20,
     effectiveStack: 100,
